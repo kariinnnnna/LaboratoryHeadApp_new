@@ -178,7 +178,14 @@
                 <div class="info-item">
                     <div class="info-label">Аудитория</div>
                     <div class="info-value">
-                        @(string.IsNullOrWhiteSpace(Model.ClassroomNumber) ? "Не закреплено" : Model.ClassroomNumber)
+                        @if (Model.Quantity <= 0)
+                        {
+                            <span class="text-muted">Неактуально (оборудование списано)</span>
+                        }
+                        else
+                        {
+                            @(string.IsNullOrWhiteSpace(Model.ClassroomNumber) ? "Не закреплено" : Model.ClassroomNumber)
+                        }
                     </div>
                 </div>
 
@@ -215,77 +222,112 @@
                 <div class="mb-3">
                     <div class="muted-note">
                         Текущий статус:
-                        <strong>@(string.IsNullOrWhiteSpace(Model.ClassroomNumber) ? "не закреплено" : $"аудитория {Model.ClassroomNumber}")</strong>
+                        @if (Model.Quantity <= 0)
+                        {
+                            <strong class="text-danger">оборудование полностью списано</strong>
+                        }
+                        else
+                        {
+                            <strong>@(string.IsNullOrWhiteSpace(Model.ClassroomNumber) ? "не закреплено" : $"аудитория {Model.ClassroomNumber}")</strong>
+                        }
                     </div>
                 </div>
 
-                <a asp-action="AssignClassroom" asp-route-id="@Model.Id" class="btn btn-outline-galaxy">
-                    @(string.IsNullOrWhiteSpace(Model.ClassroomNumber) ? "Привязать аудиторию" : "Изменить аудиторию")
-                </a>
+                @if (Model.Quantity > 0)
+                {
+                    <a asp-action="AssignClassroom" asp-route-id="@Model.Id" class="btn btn-outline-galaxy">
+                        @(string.IsNullOrWhiteSpace(Model.ClassroomNumber) ? "Привязать аудиторию" : "Изменить аудиторию")
+                    </a>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-outline-secondary" disabled>
+                        Привязка аудитории недоступна
+                    </button>
+
+                    <div class="muted-note mt-2">
+                        Оборудование полностью списано, поэтому его нельзя закрепить за аудиторией.
+                    </div>
+                }
             </div>
         </div>
 
         <div class="col-lg-4">
-    <div class="section-card">
-        <div class="section-title">Программное обеспечение</div>
-        <div class="section-text">
-            Список программного обеспечения, установленного на данном оборудовании.
-        </div>
+            <div class="section-card">
+                <div class="section-title">Программное обеспечение</div>
+                <div class="section-text">
+                    Список программного обеспечения, установленного на данном оборудовании.
+                </div>
 
-        @{
-            var softwareRecords = ViewBag.SoftwareRecords as List<MolServiceContracts.ViewModels.SoftwareRecordViewModel>
-                                  ?? new List<MolServiceContracts.ViewModels.SoftwareRecordViewModel>();
-        }
-        @{
-    var canInstallSoftware = ViewBag.CanInstallSoftware as bool? ?? false;
-    var softwareRestrictionReason = ViewBag.SoftwareRestrictionReason as string;
-}
-        @if (softwareRecords.Any())
-        {
-            <div class="mb-3">
-                @foreach (var item in softwareRecords)
+                @{
+                    var softwareRecords = ViewBag.SoftwareRecords as List<MolServiceContracts.ViewModels.SoftwareRecordViewModel>
+                    ?? new List<MolServiceContracts.ViewModels.SoftwareRecordViewModel>();
+
+                    var canInstallSoftware = ViewBag.CanInstallSoftware as bool? ?? false;
+                    var softwareRestrictionReason = ViewBag.SoftwareRestrictionReason as string;
+
+                    var canManageSoftware = Model.Quantity > 0 && canInstallSoftware;
+                    var finalSoftwareRestrictionReason =
+                    Model.Quantity <= 0
+                    ? "Оборудование полностью списано, установка и изменение ПО недоступны."
+                    : softwareRestrictionReason;
+                }
+
+                @if (softwareRecords.Any())
                 {
-                    <div class="border rounded-3 p-2 mb-2">
-                        <div class="fw-semibold">@item.SoftwareName</div>
-
-                        @if (!string.IsNullOrWhiteSpace(item.SetupDescription))
+                    <div class="mb-3">
+                        @foreach (var item in softwareRecords)
                         {
-                            <div class="small text-muted">
-                                Описание: @item.SetupDescription
-                            </div>
-                        }
+                            <div class="border rounded-3 p-2 mb-2">
+                                <div class="fw-semibold">@item.SoftwareName</div>
 
-                        @if (!string.IsNullOrWhiteSpace(item.ClaimNumber))
-                        {
-                            <div class="small text-muted">
-                                Заявка: @item.ClaimNumber
-                            </div>
-                        }
+                                @if (!string.IsNullOrWhiteSpace(item.SetupDescription))
+                                {
+                                    <div class="small text-muted">
+                                        Описание: @item.SetupDescription
+                                    </div>
+                                }
 
-                        <form asp-controller="SoftwareRecord"
+                                @if (!string.IsNullOrWhiteSpace(item.ClaimNumber))
+                                {
+                                    <div class="small text-muted">
+                                        Заявка: @item.ClaimNumber
+                                    </div>
+                                }
+
+                                @if (Model.Quantity > 0)
+                                {
+                                    <form asp-controller="SoftwareRecord"
                               asp-action="Delete"
                               method="post"
                               class="mt-2">
-                            <input type="hidden" name="id" value="@item.Id" />
-                            <input type="hidden" name="materialTechnicalValueId" value="@Model.Id" />
-                            <button type="submit" class="btn btn-sm btn-outline-danger">
-                                Удалить
-                            </button>
-                        </form>
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <input type="hidden" name="materialTechnicalValueId" value="@Model.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            Удалить
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <div class="muted-note mt-2">
+                                        Изменение списка ПО недоступно для списанного оборудования.
+                                    </div>
+                                }
+                            </div>
+                        }
                     </div>
                 }
-            </div>
-        }
-        else
-        {
-            <div class="mb-3">
-                <div class="muted-note">
-                    ПО пока не привязано.
-                </div>
-            </div>
-        }
+                else
+                {
+                    <div class="mb-3">
+                        <div class="muted-note">
+                            ПО пока не привязано.
+                        </div>
+                    </div>
+                }
 
-                @if (canInstallSoftware)
+                @if (canManageSoftware)
                 {
                     <a asp-controller="SoftwareRecord"
                    asp-action="Create"
@@ -301,13 +343,13 @@
                     </button>
 
                     <div class="muted-note mt-2">
-                        @(string.IsNullOrWhiteSpace(softwareRestrictionReason)
+                        @(string.IsNullOrWhiteSpace(finalSoftwareRestrictionReason)
                             ? "Для данного объекта установка ПО не предусмотрена."
-                            : softwareRestrictionReason)
+                            : finalSoftwareRestrictionReason)
                     </div>
                 }
-    </div>
-</div>
+            </div>
+        </div>
 
         <div class="col-lg-4">
             <div class="section-card">

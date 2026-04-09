@@ -63,10 +63,13 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
         <h2 class="mb-0">Справочник ПО</h2>
         <div class="d-flex gap-2">
+            <a asp-controller="MOL" asp-action="Index" class="btn btn-outline-galaxy">
+                Назад
+            </a>
             <a asp-controller="Software" asp-action="Create" class="btn btn-galaxy">
                 Добавить ПО
             </a>
-            <a asp-controller="SoftwareRecord" asp-action="AssignToClassroom" class="btn btn-outline-primary">
+            <a asp-controller="SoftwareRecord" asp-action="AssignToClassroom" class="btn btn-galaxy">
                 Назначить ПО на аудиторию
             </a>
         </div>

@@ -1,78 +1,228 @@
-﻿@model LaboratoryHeadApp.Models.SoftwareAssignToClassroomViewModel
+﻿@model MolServiceContracts.BindingModels.SoftwareAssignToClassroomBindingModel
 
 @{
-    ViewData["Title"] = "Назначить ПО на аудиторию";
+    ViewData["Title"] = "Назначение ПО на аудиторию";
     Layout = "_Layout";
+
+    var result = ViewBag.AssignResult as MolServiceContracts.ViewModels.SoftwareAssignToClassroomResultViewModel;
 }
 
-<h2 class="mb-4">Назначить ПО на всю аудиторию</h2>
+<style>
+    :root {
+        --galaxy: #0B1F5C;
+        --planetary: #334EAC;
+        --line: rgba(11, 31, 92, .15);
+        --soft: #f8f9fc;
+    }
 
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
-}
+    .btn-galaxy {
+        background-color: var(--galaxy);
+        border-color: var(--galaxy);
+        color: #fff;
+    }
 
-<div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+        .btn-galaxy:hover,
+        .btn-galaxy:focus {
+            background-color: var(--planetary);
+            border-color: var(--planetary);
+            color: #fff;
+        }
 
-<form asp-action="AssignToClassroom" method="post" class="card shadow-sm p-4">
-    <div class="mb-3">
-        <label asp-for="ClassroomId" class="form-label"></label>
-        <select asp-for="ClassroomId" asp-items="Model.Classrooms" class="form-select">
-            <option value="">Выберите аудиторию</option>
-        </select>
-        <span asp-validation-for="ClassroomId" class="text-danger"></span>
-    </div>
+    .btn-outline-galaxy {
+        color: var(--galaxy);
+        border-color: var(--galaxy);
+    }
 
-    <div class="mb-3">
-        <label asp-for="SoftwareId" class="form-label"></label>
-        <select asp-for="SoftwareId" asp-items="Model.Softwares" class="form-select">
-            <option value="">Выберите ПО</option>
-        </select>
-        <span asp-validation-for="SoftwareId" class="text-danger"></span>
-    </div>
+        .btn-outline-galaxy:hover,
+        .btn-outline-galaxy:focus {
+            background-color: var(--galaxy);
+            color: #fff;
+        }
 
-    <div class="mb-3">
-        <label asp-for="SetupDescription" class="form-label"></label>
-        <textarea asp-for="SetupDescription" class="form-control" rows="3"></textarea>
-        <span asp-validation-for="SetupDescription" class="text-danger"></span>
-    </div>
+    .page-card {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 8px 22px rgba(11, 31, 92, .06);
+    }
 
-    <div class="mb-3">
-        <label asp-for="ClaimNumber" class="form-label"></label>
-        <input asp-for="ClaimNumber" class="form-control" />
-        <span asp-validation-for="ClaimNumber" class="text-danger"></span>
-    </div>
+    .page-card-header {
+        padding: 18px 22px;
+        border-bottom: 1px solid var(--line);
+        background: linear-gradient(180deg, #fff, var(--soft));
+        border-radius: 18px 18px 0 0;
+    }
 
-    <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary">Назначить ПО</button>
-        <a asp-controller="Software" asp-action="Index" class="btn btn-outline-secondary">Назад</a>
-    </div>
-</form>
+    .page-card-body {
+        padding: 22px;
+    }
 
-@if (Model.Result != null)
-{
-    <div class="card mt-4 shadow-sm">
-        <div class="card-body">
-            <h5 class="card-title">Результат операции</h5>
-            <p class="mb-1">Найдено оборудования: <strong>@Model.Result.FoundEquipmentCount</strong></p>
-            <p class="mb-1">Создано записей: <strong>@Model.Result.CreatedCount</strong></p>
-            <p class="mb-1">Пропущено дублей: <strong>@Model.Result.SkippedDuplicatesCount</strong></p>
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+    }
 
-            @if (Model.Result.Errors.Any())
-            {
-                <div class="mt-3">
-                    <h6>Ошибки</h6>
-                    <ul class="mb-0">
-                        @foreach (var error in Model.Result.Errors)
-                        {
-                            <li>@error</li>
-                        }
-                    </ul>
-                </div>
-            }
+    .summary-item {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 14px 16px;
+        background: #fff;
+    }
+
+    .summary-label {
+        color: #6c757d;
+        font-size: .9rem;
+        margin-bottom: 4px;
+    }
+
+    .summary-value {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .hint-box {
+        border: 1px dashed var(--line);
+        border-radius: 14px;
+        background: #fbfcff;
+        padding: 14px 16px;
+        color: #495057;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+        <div>
+            <h2 class="mb-1">Назначение ПО на аудиторию</h2>
+            <div class="text-muted">ПО будет добавлено только на активное оборудование, подходящее для установки.</div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a asp-controller="Software" asp-action="Index" class="btn btn-outline-galaxy">
+                Назад
+            </a>
         </div>
     </div>
-}
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    <div class="page-card mb-4">
+        <div class="page-card-header">
+            <h5 class="mb-0">Параметры назначения</h5>
+        </div>
+
+        <div class="page-card-body">
+            <form asp-action="AssignToClassroom" method="post">
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="ClassroomId" class="form-label"></label>
+                        <select asp-for="ClassroomId" class="form-select" asp-items="ViewBag.Classrooms">
+                            <option value="">Выберите аудиторию</option>
+                        </select>
+                        <span asp-validation-for="ClassroomId" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="SoftwareId" class="form-label"></label>
+                        <select asp-for="SoftwareId" class="form-select" asp-items="ViewBag.Softwares">
+                            <option value="">Выберите ПО</option>
+                        </select>
+                        <span asp-validation-for="SoftwareId" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="ClaimNumber" class="form-label"></label>
+                        <input asp-for="ClaimNumber" class="form-control" />
+                        <span asp-validation-for="ClaimNumber" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-12">
+                        <label asp-for="SetupDescription" class="form-label"></label>
+                        <textarea asp-for="SetupDescription" class="form-control" rows="4"></textarea>
+                        <span asp-validation-for="SetupDescription" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-galaxy">
+                        Назначить ПО
+                    </button>
+                    <a asp-controller="Software" asp-action="Index" class="btn btn-outline-galaxy">
+                        Отмена
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="hint-box mb-4">
+        В установку попадут только те объекты, которые:
+        <strong>закреплены за выбранной аудиторией</strong>,
+        <strong>не списаны</strong>
+        и <strong>подходят для установки ПО</strong>.
+    </div>
+
+    @if (result != null)
+    {
+        <div class="page-card">
+            <div class="page-card-header">
+                <h5 class="mb-0">Результат назначения</h5>
+            </div>
+            <div class="page-card-body">
+                <div class="summary-grid mb-4">
+                    <div class="summary-item">
+                        <div class="summary-label">Найдено подходящего оборудования</div>
+                        <div class="summary-value">@result.FoundEquipmentCount</div>
+                    </div>
+
+                    <div class="summary-item">
+                        <div class="summary-label">Успешно добавлено</div>
+                        <div class="summary-value">@result.CreatedCount</div>
+                    </div>
+
+                    <div class="summary-item">
+                        <div class="summary-label">Пропущено дублей</div>
+                        <div class="summary-value">@result.SkippedDuplicatesCount</div>
+                    </div>
+
+                    <div class="summary-item">
+                        <div class="summary-label">Ошибок</div>
+                        <div class="summary-value">@result.Errors.Count</div>
+                    </div>
+                </div>
+
+                @if (result.Errors.Any())
+                {
+                    <div class="alert alert-warning mb-0">
+                        <div class="fw-semibold mb-2">Ошибки при назначении:</div>
+                        <ul class="mb-0">
+                            @foreach (var error in result.Errors)
+                            {
+                                <li>@error</li>
+                            }
+                        </ul>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-light border mb-0">
+                        Назначение завершено без ошибок.
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
