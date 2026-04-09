@@ -49,5 +49,6 @@ namespace MOLServiceWebClient
         Task<bool> DeleteSoftwareRecordAsync(int id);
 
         Task<bool> ImportClassroomsFromCoreAsync();
+        Task<SoftwareAssignToClassroomResultViewModel?> AssignSoftwareToClassroomAsync(SoftwareAssignToClassroomBindingModel model);
     }
 }

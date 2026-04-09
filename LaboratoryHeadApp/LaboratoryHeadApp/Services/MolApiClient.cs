@@ -415,6 +415,21 @@ namespace MOLServiceWebClient
 
             return true;
         }
+        public async Task<SoftwareAssignToClassroomResultViewModel?> AssignSoftwareToClassroomAsync(
+    SoftwareAssignToClassroomBindingModel model)
+        {
+            using var response = await _httpClient.PostAsJsonAsync(
+                "api/SoftwareRecord/AssignToClassroom",
+                model);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                throw new Exception(error);
+            }
+
+            return await response.Content.ReadFromJsonAsync<SoftwareAssignToClassroomResultViewModel>();
+        }
     }
 
 }

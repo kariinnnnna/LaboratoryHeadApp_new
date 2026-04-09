@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using LaboratoryHeadApp.Helpers;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using MolServiceContracts.BindingModels;
+using MolServiceContracts.ViewModels;
 using MOLServiceWebClient;
 
 namespace LaboratoryHeadApp.Controllers
@@ -58,9 +60,15 @@ namespace LaboratoryHeadApp.Controllers
             }
 
             var softwareRecords = await _client.GetSoftwareRecordsByMaterialTechnicalValueAsync(id)
-                                 ?? new List<MolServiceContracts.ViewModels.SoftwareRecordViewModel>();
+                                  ?? new List<SoftwareRecordViewModel>();
 
             ViewBag.SoftwareRecords = softwareRecords;
+
+            var canInstallSoftware = SoftwareInstallRuleHelper.CanInstallSoftware(element) && element.Quantity > 0;
+            ViewBag.CanInstallSoftware = canInstallSoftware;
+            ViewBag.SoftwareRestrictionReason = canInstallSoftware
+                ? null
+                : SoftwareInstallRuleHelper.GetRestrictionReason(element);
 
             return View(element);
         }

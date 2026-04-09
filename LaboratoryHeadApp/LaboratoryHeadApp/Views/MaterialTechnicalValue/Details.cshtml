@@ -236,7 +236,10 @@
             var softwareRecords = ViewBag.SoftwareRecords as List<MolServiceContracts.ViewModels.SoftwareRecordViewModel>
                                   ?? new List<MolServiceContracts.ViewModels.SoftwareRecordViewModel>();
         }
-
+        @{
+    var canInstallSoftware = ViewBag.CanInstallSoftware as bool? ?? false;
+    var softwareRestrictionReason = ViewBag.SoftwareRestrictionReason as string;
+}
         @if (softwareRecords.Any())
         {
             <div class="mb-3">
@@ -282,12 +285,27 @@
             </div>
         }
 
-        <a asp-controller="SoftwareRecord"
-           asp-action="Create"
-           asp-route-materialTechnicalValueId="@Model.Id"
-           class="btn btn-outline-galaxy">
-            Добавить ПО
-        </a>
+                @if (canInstallSoftware)
+                {
+                    <a asp-controller="SoftwareRecord"
+                   asp-action="Create"
+                   asp-route-materialTechnicalValueId="@Model.Id"
+                   class="btn btn-outline-galaxy">
+                        Добавить ПО
+                    </a>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-outline-secondary" disabled>
+                        Добавление ПО недоступно
+                    </button>
+
+                    <div class="muted-note mt-2">
+                        @(string.IsNullOrWhiteSpace(softwareRestrictionReason)
+                            ? "Для данного объекта установка ПО не предусмотрена."
+                            : softwareRestrictionReason)
+                    </div>
+                }
     </div>
 </div>
 

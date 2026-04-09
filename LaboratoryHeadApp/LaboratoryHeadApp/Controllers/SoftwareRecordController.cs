@@ -111,5 +111,6 @@ namespace LaboratoryHeadApp.Controllers
 
             return RedirectToAction("Details", "MaterialTechnicalValue", new { id = materialTechnicalValueId });
         }
+
     }
 }
