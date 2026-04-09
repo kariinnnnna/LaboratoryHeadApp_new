@@ -1,0 +1,145 @@
+﻿@model MolServiceContracts.BindingModels.SoftwareRecordBindingModel
+
+@{
+    ViewData["Title"] = "Привязка ПО";
+    Layout = "_Layout";
+}
+
+<style>
+    :root {
+        --galaxy: #0B1F5C;
+        --planetary: #334EAC;
+        --line: rgba(11, 31, 92, .15);
+        --soft: #f8f9fc;
+    }
+
+    .page-card {
+        max-width: 760px;
+        margin: 0 auto;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 8px 22px rgba(11, 31, 92, .06);
+        overflow: hidden;
+    }
+
+    .page-card-header {
+        padding: 18px 22px;
+        border-bottom: 1px solid var(--line);
+        background: linear-gradient(180deg, #fff, var(--soft));
+    }
+
+    .page-card-body {
+        padding: 22px;
+    }
+
+    .btn-galaxy {
+        background-color: var(--galaxy);
+        border-color: var(--galaxy);
+        color: #fff;
+    }
+
+        .btn-galaxy:hover,
+        .btn-galaxy:focus {
+            background-color: var(--planetary);
+            border-color: var(--planetary);
+            color: #fff;
+        }
+
+    .btn-outline-galaxy {
+        color: var(--galaxy);
+        border-color: var(--galaxy);
+    }
+
+        .btn-outline-galaxy:hover,
+        .btn-outline-galaxy:focus {
+            background-color: var(--galaxy);
+            color: #fff;
+        }
+
+    .info-row {
+        margin-bottom: 16px;
+    }
+
+    .info-label {
+        color: #6c757d;
+        font-size: .92rem;
+        margin-bottom: 4px;
+    }
+
+    .info-value {
+        font-weight: 600;
+        color: #0f172a;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="page-card">
+        <div class="page-card-header">
+            <h2 class="mb-1">Привязка ПО к оборудованию</h2>
+            <div class="text-muted">Добавление программного обеспечения для выбранного оборудования</div>
+        </div>
+
+        <div class="page-card-body">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="info-row">
+                <div class="info-label">Оборудование</div>
+                <div class="info-value">@ViewBag.MaterialTechnicalValueName</div>
+            </div>
+
+            <div class="info-row">
+                <div class="info-label">Инвентарный номер</div>
+                <div class="info-value">@ViewBag.InventoryNumber</div>
+            </div>
+
+            <div class="info-row">
+                <div class="info-label">Аудитория</div>
+                <div class="info-value">
+                    @(string.IsNullOrWhiteSpace(ViewBag.ClassroomNumber) ? "Не закреплено" : ViewBag.ClassroomNumber)
+                </div>
+            </div>
+
+            <form asp-action="Create" method="post">
+                <input asp-for="MaterialTechnicalValueId" type="hidden" />
+
+                <div class="mb-3">
+                    <label asp-for="SoftwareId" class="form-label">Программное обеспечение</label>
+                    <select asp-for="SoftwareId" asp-items="ViewBag.Softwares" class="form-select">
+                        <option value="0">Выберите ПО</option>
+                    </select>
+                    <span asp-validation-for="SoftwareId" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="SetupDescription" class="form-label">Описание установки</label>
+                    <textarea asp-for="SetupDescription" class="form-control" rows="3"></textarea>
+                    <span asp-validation-for="SetupDescription" class="text-danger"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="ClaimNumber" class="form-label">Номер заявки</label>
+                    <input asp-for="ClaimNumber" class="form-control" />
+                    <span asp-validation-for="ClaimNumber" class="text-danger"></span>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <a asp-controller="MaterialTechnicalValue"
+                       asp-action="Details"
+                       asp-route-id="@Model.MaterialTechnicalValueId"
+                       class="btn btn-outline-galaxy">
+                        Назад
+                    </a>
+
+                    <button type="submit" class="btn btn-galaxy">
+                        Привязать ПО
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

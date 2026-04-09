@@ -1,0 +1,94 @@
+﻿@model MolServiceContracts.BindingModels.ClassroomBindingModel
+@using MolServiceDataModels.Enums
+@using Microsoft.AspNetCore.Mvc.Rendering
+
+@{
+    ViewData["Title"] = "Добавление аудитории";
+    Layout = "_Layout";
+}
+
+<style>
+    :root {
+        --galaxy: #0B1F5C;
+        --planetary: #334EAC;
+    }
+
+    .btn-galaxy {
+        background-color: var(--galaxy);
+        border-color: var(--galaxy);
+        color: #fff;
+    }
+
+        .btn-galaxy:hover,
+        .btn-galaxy:focus {
+            background-color: var(--planetary);
+            border-color: var(--planetary);
+            color: #fff;
+        }
+
+    .btn-outline-galaxy {
+        color: var(--galaxy);
+        border-color: var(--galaxy);
+    }
+
+        .btn-outline-galaxy:hover,
+        .btn-outline-galaxy:focus {
+            background-color: var(--galaxy);
+            color: #fff;
+        }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Добавление аудитории</h2>
+        <a asp-action="Index" class="btn btn-outline-galaxy">Назад</a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form asp-action="Create" method="post">
+                <div class="mb-3">
+                    <label asp-for="CoreSystemId" class="form-label"></label>
+                    <input asp-for="CoreSystemId" class="form-control" />
+                    <span asp-validation-for="CoreSystemId" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Number" class="form-label"></label>
+                    <input asp-for="Number" class="form-control" />
+                    <span asp-validation-for="Number" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Type" class="form-label"></label>
+                    <select asp-for="Type"
+                            asp-items="Html.GetEnumSelectList<ClassroomType>()"
+                            class="form-select"></select>
+                    <span asp-validation-for="Type" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Capacity" class="form-label"></label>
+                    <input asp-for="Capacity" class="form-control" />
+                    <span asp-validation-for="Capacity" class="text-danger"></span>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input asp-for="NotUseInSchedule" class="form-check-input" />
+                    <label asp-for="NotUseInSchedule" class="form-check-label"></label>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input asp-for="HasProjector" class="form-check-input" />
+                    <label asp-for="HasProjector" class="form-check-label"></label>
+                </div>
+
+                <button type="submit" class="btn btn-galaxy">Сохранить</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

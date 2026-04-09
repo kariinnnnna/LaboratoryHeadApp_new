@@ -1,0 +1,104 @@
+﻿@model ScheduleServiceContracts.BindingModels.DutyPersonBindingModel
+
+@{
+    ViewData["Title"] = "Редактирование дежурного";
+    Layout = "_Layout";
+}
+
+<style>
+    :root {
+        --galaxy: #0B1F5C;
+        --planetary: #334EAC;
+        --sky: #D0E3FF;
+    }
+
+    .btn-galaxy {
+        background-color: var(--galaxy);
+        border-color: var(--galaxy);
+        color: #fff;
+    }
+
+        .btn-galaxy:hover,
+        .btn-galaxy:focus {
+            background-color: var(--planetary);
+            border-color: var(--planetary);
+            color: #fff;
+        }
+
+    .btn-outline-galaxy {
+        color: var(--galaxy);
+        border-color: var(--galaxy);
+    }
+
+        .btn-outline-galaxy:hover,
+        .btn-outline-galaxy:focus {
+            background-color: var(--galaxy);
+            color: #fff;
+        }
+
+    .form-card {
+        max-width: 720px;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+        <h2 class="mb-0">Редактирование дежурного</h2>
+        <a asp-controller="DutyPerson" asp-action="Index" class="btn btn-outline-galaxy">
+            К списку дежурных
+        </a>
+    </div>
+
+    <div class="card shadow-sm form-card">
+        <div class="card-body">
+            <form asp-action="Edit" method="post">
+                <input asp-for="Id" type="hidden" />
+
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="mb-3">
+                    <label asp-for="LastName" class="form-label">Фамилия</label>
+                    <input asp-for="LastName" class="form-control" placeholder="Иванов" />
+                    <span asp-validation-for="LastName" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="FirstName" class="form-label">Имя</label>
+                    <input asp-for="FirstName" class="form-control" placeholder="Иван" />
+                    <span asp-validation-for="FirstName" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Position" class="form-label">Должность</label>
+                    <input asp-for="Position" class="form-control" placeholder="Лаборант" />
+                    <span asp-validation-for="Position" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Phone" class="form-label">Телефон</label>
+                    <input asp-for="Phone" class="form-control" placeholder="+7 (900) 123-45-67" />
+                    <span asp-validation-for="Phone" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label">Email</label>
+                    <input asp-for="Email" class="form-control" placeholder="example@domain.ru" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-galaxy">
+                        Сохранить изменения
+                    </button>
+                    <a asp-controller="DutyPerson" asp-action="Index" class="btn btn-outline-galaxy">
+                        Отмена
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

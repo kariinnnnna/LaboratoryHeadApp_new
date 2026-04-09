@@ -1,0 +1,80 @@
+﻿@model MolServiceContracts.BindingModels.SoftwareBindingModel
+
+@{
+    ViewData["Title"] = "Добавление ПО";
+    Layout = "_Layout";
+}
+
+<style>
+    :root {
+        --galaxy: #0B1F5C;
+        --planetary: #334EAC;
+    }
+
+    .btn-galaxy {
+        background-color: var(--galaxy);
+        border-color: var(--galaxy);
+        color: #fff;
+    }
+
+        .btn-galaxy:hover,
+        .btn-galaxy:focus {
+            background-color: var(--planetary);
+            border-color: var(--planetary);
+            color: #fff;
+        }
+
+    .btn-outline-galaxy {
+        color: var(--galaxy);
+        border-color: var(--galaxy);
+    }
+
+        .btn-outline-galaxy:hover,
+        .btn-outline-galaxy:focus {
+            background-color: var(--galaxy);
+            color: #fff;
+        }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Добавление ПО</h2>
+        <a asp-action="Index" class="btn btn-outline-galaxy">Назад</a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form asp-action="Create" method="post">
+                <div class="mb-3">
+                    <label asp-for="SoftwareName" class="form-label"></label>
+                    <input asp-for="SoftwareName" class="form-control" />
+                    <span asp-validation-for="SoftwareName" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="SoftwareDescription" class="form-label"></label>
+                    <input asp-for="SoftwareDescription" class="form-control" />
+                    <span asp-validation-for="SoftwareDescription" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="SoftwareKey" class="form-label"></label>
+                    <input asp-for="SoftwareKey" class="form-control" />
+                    <span asp-validation-for="SoftwareKey" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="SoftwareK" class="form-label"></label>
+                    <input asp-for="SoftwareK" class="form-control" />
+                    <span asp-validation-for="SoftwareK" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn btn-galaxy">Сохранить</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,288 @@
+﻿@model LaboratoryHeadApp.Models.DutyScheduleCreateViewModel
+
+@{
+    ViewData["Title"] = "Редактирование графика дежурств";
+    Layout = "_Layout";
+
+    var dayNames = new[]
+    {
+        "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"
+    };
+
+    var monday = Model.Cells.Any()
+        ? Model.Cells.Min(x => x.Date).Date
+        : DateTime.Today;
+
+    var currentWeek = Enumerable.Range(0, 7).Select(i => monday.AddDays(i)).ToList();
+    var nextWeek = Enumerable.Range(0, 7).Select(i => monday.AddDays(7 + i)).ToList();
+}
+
+@functions {
+    public int GetCellIndex(List<LaboratoryHeadApp.Models.DutyScheduleCellEditViewModel> cells, DateTime date, int lessonTimeId)
+    {
+        return cells.FindIndex(x => x.Date.Date == date.Date && x.LessonTimeId == lessonTimeId);
+    }
+}
+
+<style>
+    :root {
+        --galaxy: #0B1F5C;
+        --planetary: #334EAC;
+        --sky: #D0E3FF;
+        --line: rgba(11, 31, 92, .18);
+        --soft: #f6f8ff;
+    }
+
+    .btn-galaxy {
+        background: var(--galaxy);
+        border-color: var(--galaxy);
+        color: #fff;
+        border-radius: 10px;
+    }
+
+        .btn-galaxy:hover {
+            background: var(--planetary);
+            border-color: var(--planetary);
+            color: #fff;
+        }
+
+    .btn-outline-galaxy {
+        color: var(--galaxy);
+        border-color: var(--galaxy);
+        border-radius: 10px;
+        background: #fff;
+    }
+
+        .btn-outline-galaxy:hover {
+            background: var(--galaxy);
+            color: #fff;
+        }
+
+    .grid-card {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(0,0,0,.04);
+    }
+
+    .grid-title {
+        font-weight: 800;
+        color: var(--galaxy);
+        margin: 0;
+    }
+
+    .duty-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 10px;
+        min-width: 1180px;
+    }
+
+        .duty-table th,
+        .duty-table td {
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 10px;
+            background: #fff;
+            text-align: center;
+            vertical-align: top;
+        }
+
+        .duty-table thead th {
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+    .pair-time {
+        display: block;
+        font-weight: 600;
+        color: #64748b;
+        font-size: 12px;
+        margin-top: 4px;
+    }
+
+    .day-cell {
+        text-align: left !important;
+        font-weight: 800;
+        color: var(--galaxy);
+        background: linear-gradient(0deg, rgba(208,227,255,.45), rgba(208,227,255,.45)), #fff;
+        white-space: nowrap;
+    }
+
+    .scroll-wrap {
+        overflow: auto;
+        padding: 8px 10px 14px;
+    }
+
+    .topbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+    }
+
+    .top-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .date-note {
+        display: block;
+        margin-top: 4px;
+        font-size: 12px;
+        color: #64748b;
+        font-weight: 600;
+    }
+
+    .cell-select {
+        min-width: 150px;
+    }
+
+    .validation-summary-errors ul {
+        margin-bottom: 0;
+    }
+</style>
+
+<div class="container py-4">
+    <form asp-action="Edit" method="post">
+        <div class="topbar">
+            <div>
+                <h2 class="grid-title">Редактирование графика дежурств</h2>
+            </div>
+
+            <div class="top-actions">
+                <button type="submit" class="btn btn-galaxy">Сохранить изменения</button>
+                <a asp-action="Index" class="btn btn-outline-galaxy">Отмена</a>
+            </div>
+        </div>
+
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3"></div>
+
+        <div class="grid-card mb-4">
+            <div class="p-3 pb-0">
+                <h5 class="grid-title" style="font-size:18px;">Текущая неделя</h5>
+            </div>
+
+            <div class="scroll-wrap">
+                <table class="duty-table">
+                    <thead>
+                        <tr>
+                            <th style="min-width:180px;">День</th>
+                            @foreach (var lesson in Model.LessonTimes)
+                            {
+                                <th style="min-width:170px;">
+                                    @lesson.PairNumber пара
+                                    <span class="pair-time">@lesson.StartTime.ToString(@"hh\:mm")–@lesson.EndTime.ToString(@"hh\:mm")</span>
+                                </th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < currentWeek.Count; i++)
+                        {
+                            var date = currentWeek[i];
+
+                            <tr>
+                                <td class="day-cell">
+                                    @dayNames[i]
+                                    <span class="date-note">@date.ToString("dd.MM.yyyy")</span>
+                                </td>
+
+                                @foreach (var lesson in Model.LessonTimes)
+                                {
+                                    var index = GetCellIndex(Model.Cells, date, lesson.Id);
+
+                                    <td>
+                                        @if (index >= 0)
+                                        {
+                                            <input type="hidden" asp-for="Cells[index].Date" />
+                                            <input type="hidden" asp-for="Cells[index].LessonTimeId" />
+                                            <input type="hidden" asp-for="Cells[index].PairNumber" />
+                                            <input type="hidden" asp-for="Cells[index].StartTime" />
+                                            <input type="hidden" asp-for="Cells[index].EndTime" />
+
+                                            <select asp-for="Cells[index].DutyPerson1Id" asp-items="Model.DutyPersonItems" class="form-select form-select-sm mb-2 cell-select">
+                                                <option value="">1</option>
+                                            </select>
+
+                                            <select asp-for="Cells[index].DutyPerson2Id" asp-items="Model.DutyPersonItems" class="form-select form-select-sm cell-select">
+                                                <option value="">2</option>
+                                            </select>
+                                        }
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="grid-card">
+            <div class="p-3 pb-0">
+                <h5 class="grid-title" style="font-size:18px;">Следующая неделя</h5>
+            </div>
+
+            <div class="scroll-wrap">
+                <table class="duty-table">
+                    <thead>
+                        <tr>
+                            <th style="min-width:180px;">День</th>
+                            @foreach (var lesson in Model.LessonTimes)
+                            {
+                                <th style="min-width:170px;">
+                                    @lesson.PairNumber пара
+                                    <span class="pair-time">@lesson.StartTime.ToString(@"hh\:mm")–@lesson.EndTime.ToString(@"hh\:mm")</span>
+                                </th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < nextWeek.Count; i++)
+                        {
+                            var date = nextWeek[i];
+
+                            <tr>
+                                <td class="day-cell">
+                                    @dayNames[i]
+                                    <span class="date-note">@date.ToString("dd.MM.yyyy")</span>
+                                </td>
+
+                                @foreach (var lesson in Model.LessonTimes)
+                                {
+                                    var index = GetCellIndex(Model.Cells, date, lesson.Id);
+
+                                    <td>
+                                        @if (index >= 0)
+                                        {
+                                            <input type="hidden" asp-for="Cells[index].Date" />
+                                            <input type="hidden" asp-for="Cells[index].LessonTimeId" />
+                                            <input type="hidden" asp-for="Cells[index].PairNumber" />
+                                            <input type="hidden" asp-for="Cells[index].StartTime" />
+                                            <input type="hidden" asp-for="Cells[index].EndTime" />
+
+                                            <select asp-for="Cells[index].DutyPerson1Id" asp-items="Model.DutyPersonItems" class="form-select form-select-sm mb-2 cell-select">
+                                                <option value="">1</option>
+                                            </select>
+
+                                            <select asp-for="Cells[index].DutyPerson2Id" asp-items="Model.DutyPersonItems" class="form-select form-select-sm cell-select">
+                                                <option value="">2</option>
+                                            </select>
+                                        }
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

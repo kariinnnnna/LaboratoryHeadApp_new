@@ -1,0 +1,248 @@
+﻿@{
+    ViewData["Title"] = "Модуль расписания";
+    Layout = "_Layout";
+}
+
+<style>
+    :root {
+        --galaxy: #0B1F5C;
+        --planetary: #334EAC;
+        --sky: #D0E3FF;
+    }
+
+    .btn-galaxy {
+        background-color: var(--galaxy);
+        border-color: var(--galaxy);
+        color: #fff;
+    }
+
+        .btn-galaxy:hover,
+        .btn-galaxy:focus {
+            background-color: var(--planetary);
+            border-color: var(--planetary);
+            color: #fff;
+        }
+
+    .btn-outline-galaxy {
+        color: var(--galaxy);
+        border-color: var(--galaxy);
+    }
+
+        .btn-outline-galaxy:hover,
+        .btn-outline-galaxy:focus {
+            background-color: var(--galaxy);
+            color: #fff;
+        }
+
+    .dropdown-menu .dropdown-item:active {
+        background-color: var(--planetary);
+    }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+        <h2 class="mb-0">Модуль расписания и графиков</h2>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-galaxy">
+            На главную
+        </a>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- Время занятий -->
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Время занятий</h5>
+                    <p class="card-text">
+                        Справочник времени учебных пар: номер пары, время начала и окончания.
+                    </p>
+                    <ul class="small mb-3">
+                        <li>Номер пары</li>
+                        <li>Время начала и окончания</li>
+                        <li>Описание (при необходимости)</li>
+                    </ul>
+                    <div class="mt-auto">
+                        <a asp-controller="LessonTime" asp-action="Index"
+                           class="btn btn-galaxy">
+                            Время пар
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Просмотр расписания по разрезам -->
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Просмотр расписания по разделам</h5>
+                    <p class="card-text">
+                        Просмотр расписания по аудиториям, преподавателям и учебным группам.
+                    </p>
+                    <ul class="small mb-3">
+                        <li>Аудитории</li>
+                        <li>Преподаватели</li>
+                        <li>Группы</li>
+                    </ul>
+
+                    <div class="mt-auto">
+                        <div class="dropdown">
+                            <button class="btn btn-outline-galaxy dropdown-toggle"
+                                    type="button"
+                                    id="lessonsDropdown"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                Выбрать раздел
+                            </button>
+
+                            <ul class="dropdown-menu" aria-labelledby="lessonsDropdown">
+                                <li>
+                                    <a class="dropdown-item"
+                                       asp-controller="Schedule"
+                                       asp-action="LessonsRooms">
+                                        Аудитории
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item"
+                                       asp-controller="Schedule"
+                                       asp-action="LessonsTeachers">
+                                        Преподаватели
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item"
+                                       asp-controller="Schedule"
+                                       asp-action="LessonsGroups">
+                                        Группы
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="small text-muted mt-2">
+                            Выберите способ просмотра расписания.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Расписание дежурств -->
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Расписание дежурств</h5>
+                    <p class="card-text">
+                        Планирование дежурств в лаборатории: ответственные, даты, время и место.
+                    </p>
+                    <ul class="small mb-3">
+                        <li>Список дежурств по датам</li>
+                        <li>ФИО дежурного</li>
+                        <li>Место и комментарии</li>
+                    </ul>
+                    <div class="mt-auto">
+                        <a asp-controller="DutySchedule" asp-action="Index"
+                           class="btn btn-galaxy">
+                            Расписание дежурств
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Дежурные -->
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Дежурные</h5>
+                    <p class="card-text">
+                        Справочник сотрудников, назначаемых на дежурства в лаборатории.
+                    </p>
+                    <ul class="small mb-3">
+                        <li>ФИО дежурного</li>
+                        <li>Должность</li>
+                        <li>Контактные данные</li>
+                    </ul>
+                    <div class="mt-auto">
+                        <a asp-controller="DutyPerson" asp-action="Index"
+                           class="btn btn-outline-galaxy">
+                            Список дежурных
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Справочник аудиторий -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Аудитории</h5>
+                    <p class="card-text">
+                        Справочник аудиторий, используемых в расписании.
+                    </p>
+                    <ul class="small mb-3">
+                        <li>Номер аудитории</li>
+                        <li>Вместимость</li>
+                        <li>Тип аудитории</li>
+                    </ul>
+                    <div class="mt-auto">
+                        <a asp-controller="Classroom" asp-action="Index"
+                           class="btn btn-outline-galaxy">
+                            Справочник аудиторий
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Справочник преподавателей -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Преподаватели</h5>
+                    <p class="card-text">
+                        Справочник преподавателей, участвующих в учебном процессе.
+                    </p>
+                    <ul class="small mb-3">
+                        <li>ФИО преподавателя</li>
+                        <li>Должность</li>
+                        <li>Учебная нагрузка</li>
+                    </ul>
+                    <div class="mt-auto">
+                        <a asp-controller="Teacher" asp-action="Index"
+                           class="btn btn-outline-galaxy">
+                            Справочник преподавателей
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Справочник групп -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Группы</h5>
+                    <p class="card-text">
+                        Справочник учебных групп, используемых в расписании.
+                    </p>
+                    <ul class="small mb-3">
+                        <li>Название группы</li>
+                        <li>Курс</li>
+                        <li>Направление подготовки</li>
+                    </ul>
+                    <div class="mt-auto">
+                        <a asp-controller="Group" asp-action="Index"
+                           class="btn btn-outline-galaxy">
+                            Справочник групп
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

@@ -1,0 +1,478 @@
+﻿@model LaboratoryHeadApp.Models.LessonsGroupsPageViewModel
+@using System.Text.Json
+
+@{
+    ViewData["Title"] = "Расписание по группам";
+    Layout = "_Layout";
+}
+
+<style>
+    :root {
+        --galaxy: #0B1F5C;
+        --planetary: #334EAC;
+        --sky: #D0E3FF;
+        --ink: #0f172a;
+        --line: rgba(11, 31, 92, .18);
+        --card: #ffffff;
+        --soft: #f6f8ff;
+        --cell: #fbfcff;
+    }
+
+    .page-title, .sch-topbar, .sch-left, .sch-right {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .page-title {
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }
+
+    .sch-topbar {
+        align-items: end;
+        justify-content: space-between;
+        margin-bottom: 14px;
+    }
+
+    .sch-left {
+        align-items: center;
+        gap: 10px;
+    }
+
+    .sch-right {
+        gap: 10px;
+    }
+
+    .btn-icon {
+        width: 44px;
+        height: 44px;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--galaxy);
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: .15s;
+        font-size: 18px;
+    }
+
+        .btn-icon:hover {
+            background: var(--soft);
+        }
+
+    .datebox input[type="date"] {
+        height: 44px;
+        min-width: 150px;
+        padding: 0 14px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fff;
+        color: var(--ink);
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .filters {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+        .filters select {
+            height: 38px;
+            border: 1px solid var(--line);
+            background: #fff;
+            padding: 0 10px;
+            font-size: 14px;
+            min-width: 180px;
+            border-radius: 10px;
+        }
+
+    .btn-galaxy, .btn-outline-galaxy {
+        border-radius: 10px;
+        height: 38px;
+        padding: 0 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+        transition: .15s;
+        text-decoration: none;
+    }
+
+    .btn-galaxy {
+        background-color: var(--galaxy);
+        border: 1px solid var(--galaxy);
+        color: #fff;
+    }
+
+        .btn-galaxy:hover {
+            background-color: var(--planetary);
+            border-color: var(--planetary);
+            color: #fff;
+        }
+
+    .btn-outline-galaxy {
+        color: var(--galaxy);
+        border: 1px solid var(--galaxy);
+        background: #fff;
+    }
+
+        .btn-outline-galaxy:hover {
+            background: var(--galaxy);
+            color: #fff;
+        }
+
+    .grid-wrap {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 14px;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(0,0,0,.04);
+        overflow: visible;
+    }
+
+    .table-grid {
+        display: grid;
+        grid-template-columns: 170px repeat(8, minmax(0, 1fr));
+        gap: 10px;
+        align-items: stretch;
+        width: 100%;
+    }
+
+    .headcell {
+        border: 1px solid var(--line);
+        padding: 10px 8px;
+        background: #fff;
+        text-align: center;
+        font-weight: 800;
+        border-radius: 14px;
+        line-height: 1.2;
+        font-size: 12px;
+        min-height: 62px;
+    }
+
+        .headcell div, .headcell small {
+            white-space: nowrap;
+        }
+
+        .headcell small {
+            font-weight: 500;
+            display: block;
+            margin-top: 4px;
+            color: #64748b;
+            font-size: 11px;
+        }
+
+    .rowlabel {
+        min-height: 170px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--cell);
+        padding: 14px 12px;
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--galaxy);
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-start;
+        word-break: break-word;
+    }
+
+    .slot {
+        min-height: 170px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--cell);
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        box-sizing: border-box;
+    }
+
+    .lesson {
+        border: 1px solid rgba(11, 31, 92, .14);
+        padding: 8px 8px 7px;
+        background: #fff;
+        border-radius: 12px;
+        line-height: 1.15;
+        box-sizing: border-box;
+        box-shadow: 0 1px 2px rgba(0,0,0,.03);
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .lesson-manual {
+        background: linear-gradient(0deg, rgba(255, 244, 214, .85), rgba(255, 244, 214, .85)), #fff;
+        border-color: rgba(217, 119, 6, .35);
+    }
+
+    .lesson .type {
+        display: inline-flex;
+        align-items: center;
+        min-height: 22px;
+        padding: 0 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 800;
+        background: var(--sky);
+        color: var(--galaxy);
+        margin-bottom: 6px;
+    }
+
+    .lesson .manual-badge, .lesson .subgroup {
+        display: inline-flex;
+        margin: 0 0 6px 0;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .lesson .manual-badge {
+        background: #fff3cd;
+        color: #92400e;
+    }
+
+    .lesson .subgroup {
+        background: #eef2ff;
+        color: #334155;
+    }
+
+    .lesson .title {
+        font-weight: 800;
+        margin-bottom: 6px;
+        color: #0f172a;
+        font-size: 11px;
+        line-height: 1.15;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .lesson .meta {
+        font-size: 11px;
+        color: #475569;
+        margin-top: 2px;
+        line-height: 1.15;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="page-title">
+        <div><h2 class="mb-1">Расписание занятий по группам</h2></div>
+        <a asp-controller="Schedule" asp-action="Index" class="btn btn-outline-galaxy">Назад к модулю расписания</a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success mb-3">@TempData["SuccessMessage"]</div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger mb-3">@TempData["ErrorMessage"]</div>
+    }
+
+    <div class="sch-topbar">
+        <div class="sch-left">
+            <button class="btn-icon" id="prevDay" title="Назад">‹</button>
+            <div class="datebox"><input type="date" id="date" /></div>
+            <button class="btn-icon" id="nextDay" title="Вперёд">›</button>
+
+            <div class="filters">
+                <select id="filterGroup"><option value="">Группа: все</option></select>
+                <select id="filterRoom"><option value="">Аудитория: все</option></select>
+                <select id="filterTeacher"><option value="">Преподаватель: все</option></select>
+            </div>
+        </div>
+
+        <div class="sch-right">
+            <a asp-controller="Schedule"
+               asp-action="SyncLessons"
+               asp-route-returnAction="LessonsGroups"
+               asp-route-date="@Model.SelectedDate"
+               class="btn-galaxy">
+                Запустить синхронизацию
+            </a>
+        </div>
+    </div>
+
+    <div class="grid-wrap">
+        <div class="table-grid" id="table"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const pairs = [
+            { no: 1, time: "08:30-09:50" },
+            { no: 2, time: "10:00-11:20" },
+            { no: 3, time: "11:30-12:50" },
+            { no: 4, time: "13:30-14:50" },
+            { no: 5, time: "15:00-16:20" },
+            { no: 6, time: "16:30-17:50" },
+            { no: 7, time: "18:00-19:20" },
+            { no: 8, time: "19:30-20:50" }
+        ];
+
+        const groups = @Html.Raw(JsonSerializer.Serialize(Model.Groups));
+        const rooms = @Html.Raw(JsonSerializer.Serialize(Model.Classrooms));
+        const teachers = @Html.Raw(JsonSerializer.Serialize(Model.Teachers));
+
+        const lessons = @Html.Raw(JsonSerializer.Serialize(
+        Model.Lessons.Select(x => new
+        {
+        group = x.GroupName,
+        pair = x.PairNumber,
+        type = x.TypeName,
+        title = x.Subject,
+        room = x.ClassroomNumber,
+        teacher = x.TeacherName,
+        subgroup = x.Subgroup,
+        isImported = x.IsImported
+        })));
+
+        const elTable = document.getElementById("table");
+        const elDate = document.getElementById("date");
+        const elGroup = document.getElementById("filterGroup");
+        const elRoom = document.getElementById("filterRoom");
+        const elTeacher = document.getElementById("filterTeacher");
+        const elPrev = document.getElementById("prevDay");
+        const elNext = document.getElementById("nextDay");
+
+        elDate.value = "@Model.SelectedDate";
+
+        function fillSelect(el, items) {
+            for (const it of items) {
+                const opt = document.createElement("option");
+                opt.value = it;
+                opt.textContent = it;
+                el.appendChild(opt);
+            }
+        }
+
+        fillSelect(elGroup, groups);
+        fillSelect(elRoom, rooms);
+        fillSelect(elTeacher, teachers);
+
+        function addDays(dateStr, delta) {
+            const d = new Date(dateStr + "T00:00:00");
+            d.setDate(d.getDate() + delta);
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, "0");
+            const dd = String(d.getDate()).padStart(2, "0");
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        elPrev.addEventListener("click", () => {
+            window.location.href = `/Schedule/LessonsGroups?date=${addDays(elDate.value, -1)}`;
+        });
+
+        elNext.addEventListener("click", () => {
+            window.location.href = `/Schedule/LessonsGroups?date=${addDays(elDate.value, 1)}`;
+        });
+
+        elDate.addEventListener("change", () => {
+            window.location.href = `/Schedule/LessonsGroups?date=${elDate.value}`;
+        });
+
+        [elGroup, elRoom, elTeacher].forEach(x => x.addEventListener("change", render));
+
+        function render() {
+            elTable.innerHTML = "";
+
+            const empty = document.createElement("div");
+            empty.className = "headcell";
+            empty.innerHTML = `<div>Группы</div><small>${formatDate(elDate.value)}</small>`;
+            elTable.appendChild(empty);
+
+            for (const p of pairs) {
+                const h = document.createElement("div");
+                h.className = "headcell";
+                h.innerHTML = `<div>${p.no} пара</div><small>${p.time}</small>`;
+                elTable.appendChild(h);
+            }
+
+            const fGroup = elGroup.value;
+            const fRoom = elRoom.value;
+            const fTeacher = elTeacher.value;
+
+            const filteredLessons = lessons
+                .filter(x => !fGroup || x.group === fGroup)
+                .filter(x => !fRoom || x.room === fRoom)
+                .filter(x => !fTeacher || x.teacher === fTeacher);
+
+            const groupRows = groups.filter(g => {
+                if (fGroup && g !== fGroup) return false;
+                if (!fRoom && !fTeacher) return true;
+                return filteredLessons.some(x => x.group === g);
+            });
+
+            for (const g of groupRows) {
+                const rowLabel = document.createElement("div");
+                rowLabel.className = "rowlabel";
+                rowLabel.textContent = g;
+                elTable.appendChild(rowLabel);
+
+                for (const p of pairs) {
+                    const slot = document.createElement("div");
+                    slot.className = "slot";
+
+                    const inCell = filteredLessons.filter(x => x.group === g && x.pair === p.no);
+
+                    for (const l of inCell) {
+                        const card = document.createElement("div");
+                        card.className = "lesson" + (!l.isImported ? " lesson-manual" : "");
+                        card.innerHTML = `
+                                    <div class="type">${escapeHtml(mapType(l.type ?? ""))}</div>
+                                    ${!l.isImported ? `<div class="manual-badge">Бронь</div>` : ""}
+                                    ${l.subgroup ? `<div class="subgroup">${escapeHtml(l.subgroup)}</div>` : ""}
+                                    <div class="title">${escapeHtml(l.title ?? "")}</div>
+                                    <div class="meta"><b>Ауд.</b><br>${escapeHtml(l.room ?? "")}</div>
+                                    <div class="meta"><b>Преп.</b><br>${escapeHtml(l.teacher ?? "")}</div>
+                                `;
+                        slot.appendChild(card);
+                    }
+
+                    elTable.appendChild(slot);
+                }
+            }
+        }
+
+        function mapType(type) {
+            switch ((type || "").toLowerCase()) {
+                case "lecture": return "лек";
+                case "practice": return "пр";
+                case "laboratory": return "лаб";
+                case "consultation": return "конс";
+                case "exam": return "экз";
+                case "test": return "зач";
+                default: return type;
+            }
+        }
+
+        function formatDate(iso) {
+            const [y, m, d] = iso.split("-");
+            return `${d}.${m}.${y}`;
+        }
+
+        function escapeHtml(s) {
+            return String(s)
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+        }
+
+        render();
+    </script>
+}

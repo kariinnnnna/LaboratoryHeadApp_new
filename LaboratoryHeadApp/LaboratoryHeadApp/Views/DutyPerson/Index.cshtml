@@ -1,0 +1,142 @@
+﻿@model List<ScheduleServiceContracts.ViewModels.DutyPersonViewModel>
+
+@{
+    ViewData["Title"] = "Дежурные";
+    Layout = "_Layout";
+}
+
+<style>
+    :root {
+        --galaxy: #0B1F5C;
+        --planetary: #334EAC;
+        --sky: #D0E3FF;
+        --danger-soft: #dc3545;
+    }
+
+    .btn-galaxy {
+        background-color: var(--galaxy);
+        border-color: var(--galaxy);
+        color: #fff;
+    }
+
+        .btn-galaxy:hover,
+        .btn-galaxy:focus {
+            background-color: var(--planetary);
+            border-color: var(--planetary);
+            color: #fff;
+        }
+
+    .btn-outline-galaxy {
+        color: var(--galaxy);
+        border-color: var(--galaxy);
+    }
+
+        .btn-outline-galaxy:hover,
+        .btn-outline-galaxy:focus {
+            background-color: var(--galaxy);
+            color: #fff;
+        }
+
+    .btn-outline-danger-soft {
+        color: var(--danger-soft);
+        border-color: var(--danger-soft);
+    }
+
+        .btn-outline-danger-soft:hover,
+        .btn-outline-danger-soft:focus {
+            background-color: var(--danger-soft);
+            color: #fff;
+        }
+
+    .table thead {
+        background-color: var(--galaxy);
+        color: white;
+    }
+
+    .actions-cell {
+        white-space: nowrap;
+        width: 1%;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+        <h2 class="mb-0">Справочник дежурных</h2>
+        <div class="d-flex gap-2">
+            <a asp-controller="Schedule" asp-action="Index" class="btn btn-outline-galaxy">
+                Назад
+            </a>
+            <a asp-controller="DutyPerson" asp-action="Create" class="btn btn-galaxy">
+                Добавить дежурного
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            @if (Model == null || Model.Count == 0)
+            {
+                <div class="alert alert-light border mb-0">
+                    Список дежурных пока пуст.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Фамилия</th>
+                                <th>Имя</th>
+                                <th>Должность</th>
+                                <th>Телефон</th>
+                                <th>Email</th>
+                                <th class="actions-cell">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@item.LastName</td>
+                                    <td>@item.FirstName</td>
+                                    <td>@item.Position</td>
+                                    <td>@item.Phone</td>
+                                    <td>@item.Email</td>
+                                    <td class="actions-cell">
+                                        <div class="d-flex gap-2">
+                                            <a asp-controller="DutyPerson"
+                                       asp-action="Edit"
+                                       asp-route-id="@item.Id"
+                                       class="btn btn-sm btn-outline-galaxy">
+                                                Редактировать
+                                            </a>
+
+                                            <form asp-controller="DutyPerson"
+                                          asp-action="Delete"
+                                          asp-route-id="@item.Id"
+                                          method="post"
+                                          onsubmit="return confirm('Удалить дежурного?');">
+                                                <button type="submit"
+                                                class="btn btn-sm btn-outline-danger-soft">
+                                                    Удалить
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>

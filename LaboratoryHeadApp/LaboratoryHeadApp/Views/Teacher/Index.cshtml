@@ -1,0 +1,147 @@
+﻿@model List<ScheduleServiceContracts.ViewModels.TeacherViewModel>
+
+@{
+    ViewData["Title"] = "Преподаватели";
+    Layout = "_Layout";
+}
+
+<style>
+    :root {
+        --galaxy: #0B1F5C;
+        --planetary: #334EAC;
+        --danger-soft: #dc3545;
+    }
+
+    .btn-galaxy {
+        background-color: var(--galaxy);
+        border-color: var(--galaxy);
+        color: #fff;
+    }
+
+        .btn-galaxy:hover,
+        .btn-galaxy:focus {
+            background-color: var(--planetary);
+            border-color: var(--planetary);
+            color: #fff;
+        }
+
+    .btn-outline-galaxy {
+        color: var(--galaxy);
+        border-color: var(--galaxy);
+    }
+
+        .btn-outline-galaxy:hover,
+        .btn-outline-galaxy:focus {
+            background-color: var(--galaxy);
+            color: #fff;
+        }
+
+    .btn-outline-danger-soft {
+        color: var(--danger-soft);
+        border-color: var(--danger-soft);
+    }
+
+        .btn-outline-danger-soft:hover,
+        .btn-outline-danger-soft:focus {
+            background-color: var(--danger-soft);
+            color: #fff;
+        }
+
+    .table thead {
+        background-color: var(--galaxy);
+        color: white;
+    }
+
+    .actions-cell {
+        white-space: nowrap;
+        width: 1%;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+        <h2 class="mb-0">Справочник преподавателей</h2>
+        <div class="d-flex gap-2">
+            <a asp-controller="Schedule" asp-action="Index" class="btn btn-outline-galaxy">
+                Назад
+            </a>
+
+            <form asp-controller="Teacher"
+                  asp-action="ImportFromCore"
+                  method="post"
+                  class="d-inline">
+                <button type="submit" class="btn btn-galaxy">
+                    Запустить синхронизацию
+                </button>
+            </form>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            @if (Model == null || Model.Count == 0)
+            {
+                <div class="alert alert-light border mb-0">
+                    Список преподавателей пока пуст.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>CoreSystemId</th>
+                                <th>Преподаватель</th>
+                                <th class="actions-cell">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@item.CoreSystemId</td>
+                                    <td>@item.TeacherName</td>
+                                    <td class="actions-cell">
+                                        <div class="d-flex gap-2">
+                                            <a asp-controller="Teacher"
+                                       asp-action="Edit"
+                                       asp-route-id="@item.Id"
+                                       class="btn btn-sm btn-outline-galaxy">
+                                                Редактировать
+                                            </a>
+
+                                            <form asp-controller="Teacher"
+                                          asp-action="Delete"
+                                          asp-route-id="@item.Id"
+                                          method="post"
+                                          onsubmit="return confirm('Удалить преподавателя?');">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger-soft">
+                                                    Удалить
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>

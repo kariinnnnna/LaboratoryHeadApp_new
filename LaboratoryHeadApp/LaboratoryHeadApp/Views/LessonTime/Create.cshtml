@@ -1,0 +1,95 @@
+﻿@model ScheduleServiceContracts.BindingModels.LessonTimeBindingModel
+
+@{
+    ViewData["Title"] = "Добавление времени пары";
+    Layout = "_Layout";
+}
+
+<style>
+    :root {
+        --galaxy: #0B1F5C;
+        --planetary: #334EAC;
+    }
+
+    .btn-galaxy {
+        background-color: var(--galaxy);
+        border-color: var(--galaxy);
+        color: #fff;
+    }
+
+        .btn-galaxy:hover,
+        .btn-galaxy:focus {
+            background-color: var(--planetary);
+            border-color: var(--planetary);
+            color: #fff;
+        }
+
+    .btn-outline-galaxy {
+        color: var(--galaxy);
+        border-color: var(--galaxy);
+    }
+
+        .btn-outline-galaxy:hover,
+        .btn-outline-galaxy:focus {
+            background-color: var(--galaxy);
+            color: #fff;
+        }
+
+    .form-card {
+        max-width: 720px;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+        <h2 class="mb-0">Добавление времени пары</h2>
+        <a asp-controller="LessonTime" asp-action="Index" class="btn btn-outline-galaxy">
+            К списку пар
+        </a>
+    </div>
+
+    <div class="card shadow-sm form-card">
+        <div class="card-body">
+            <form asp-action="Create" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="mb-3">
+                    <label asp-for="PairNumber" class="form-label">Номер пары</label>
+                    <input asp-for="PairNumber" class="form-control" />
+                    <span asp-validation-for="PairNumber" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="StartTime" class="form-label">Время начала</label>
+                    <input asp-for="StartTime" type="time" class="form-control" />
+                    <span asp-validation-for="StartTime" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="EndTime" class="form-label">Время окончания</label>
+                    <input asp-for="EndTime" type="time" class="form-control" />
+                    <span asp-validation-for="EndTime" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label">Описание</label>
+                    <input asp-for="Description" class="form-control" />
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-galaxy">
+                        Сохранить
+                    </button>
+                    <a asp-controller="LessonTime" asp-action="Index" class="btn btn-outline-galaxy">
+                        Отмена
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

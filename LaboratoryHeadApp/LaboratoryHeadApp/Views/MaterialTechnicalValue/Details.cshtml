@@ -1,0 +1,341 @@
+﻿@model MolServiceContracts.ViewModels.MaterialTechnicalValueViewModel
+
+@{
+    ViewData["Title"] = "Карточка оборудования";
+    Layout = "_Layout";
+}
+
+<style>
+    :root {
+        --galaxy: #0B1F5C;
+        --planetary: #334EAC;
+        --sky: #D0E3FF;
+        --soft: #f8f9fc;
+        --line: rgba(11, 31, 92, .15);
+    }
+
+    .btn-galaxy {
+        background-color: var(--galaxy);
+        border-color: var(--galaxy);
+        color: #fff;
+    }
+
+        .btn-galaxy:hover,
+        .btn-galaxy:focus {
+            background-color: var(--planetary);
+            border-color: var(--planetary);
+            color: #fff;
+        }
+
+    .btn-outline-galaxy {
+        color: var(--galaxy);
+        border-color: var(--galaxy);
+    }
+
+        .btn-outline-galaxy:hover,
+        .btn-outline-galaxy:focus {
+            background-color: var(--galaxy);
+            color: #fff;
+        }
+
+    .info-card {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 8px 22px rgba(11, 31, 92, .06);
+    }
+
+    .info-header {
+        padding: 18px 22px;
+        border-bottom: 1px solid var(--line);
+        background: linear-gradient(180deg, #fff, var(--soft));
+        border-radius: 18px 18px 0 0;
+    }
+
+    .info-body {
+        padding: 22px;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+    }
+
+    .info-item {
+        padding: 14px 16px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: #fff;
+    }
+
+    .info-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 6px;
+    }
+
+    .info-value {
+        font-weight: 600;
+        color: #0f172a;
+        word-break: break-word;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 0.92rem;
+        font-weight: 700;
+    }
+
+    .status-active {
+        background: rgba(25, 135, 84, 0.12);
+        color: #198754;
+    }
+
+    .status-writtenoff {
+        background: rgba(220, 53, 69, 0.12);
+        color: #dc3545;
+    }
+
+    .section-card {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: #fff;
+        padding: 20px;
+        box-shadow: 0 8px 22px rgba(11, 31, 92, .05);
+        height: 100%;
+    }
+
+    .section-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--galaxy);
+        margin-bottom: 10px;
+    }
+
+    .section-text {
+        color: #495057;
+        margin-bottom: 16px;
+    }
+
+    .muted-note {
+        color: #6c757d;
+        font-size: 0.95rem;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+        <div>
+            <h2 class="mb-1">Карточка оборудования</h2>
+            <div class="text-muted">@Model.FullName</div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a asp-action="Index" class="btn btn-outline-galaxy">Назад</a>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-galaxy">Редактировать</a>
+        </div>
+    </div>
+
+    <div class="info-card mb-4">
+        <div class="info-header">
+            <h5 class="mb-0">Основная информация</h5>
+        </div>
+        <div class="info-body">
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Статус</div>
+                    <div class="info-value">
+                        @if (Model.Quantity <= 0)
+                        {
+                            <span class="status-badge status-writtenoff">Полностью списано</span>
+                        }
+                        else
+                        {
+                            <span class="status-badge status-active">Активно</span>
+                        }
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">Код / инвентарный номер</div>
+                    <div class="info-value">@Model.InventoryNumber</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">Наименование</div>
+                    <div class="info-value">@Model.FullName</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">Количество</div>
+                    <div class="info-value">@Model.Quantity</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">Аудитория</div>
+                    <div class="info-value">
+                        @(string.IsNullOrWhiteSpace(Model.ClassroomNumber) ? "Не закреплено" : Model.ClassroomNumber)
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">Материально-ответственное лицо</div>
+                    <div class="info-value">@Model.MaterialResponsiblePersonName</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">Местоположение</div>
+                    <div class="info-value">
+                        @(string.IsNullOrWhiteSpace(Model.Location) ? "Не указано" : Model.Location)
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">Описание</div>
+                    <div class="info-value">
+                        @(string.IsNullOrWhiteSpace(Model.Description) ? "Не указано" : Model.Description)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-4">
+            <div class="section-card">
+                <div class="section-title">Закрепление за аудиторией</div>
+                <div class="section-text">
+                    Переместить оборудование в аудиторию.
+                </div>
+
+                <div class="mb-3">
+                    <div class="muted-note">
+                        Текущий статус:
+                        <strong>@(string.IsNullOrWhiteSpace(Model.ClassroomNumber) ? "не закреплено" : $"аудитория {Model.ClassroomNumber}")</strong>
+                    </div>
+                </div>
+
+                <a asp-action="AssignClassroom" asp-route-id="@Model.Id" class="btn btn-outline-galaxy">
+                    @(string.IsNullOrWhiteSpace(Model.ClassroomNumber) ? "Привязать аудиторию" : "Изменить аудиторию")
+                </a>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+    <div class="section-card">
+        <div class="section-title">Программное обеспечение</div>
+        <div class="section-text">
+            Список программного обеспечения, установленного на данном оборудовании.
+        </div>
+
+        @{
+            var softwareRecords = ViewBag.SoftwareRecords as List<MolServiceContracts.ViewModels.SoftwareRecordViewModel>
+                                  ?? new List<MolServiceContracts.ViewModels.SoftwareRecordViewModel>();
+        }
+
+        @if (softwareRecords.Any())
+        {
+            <div class="mb-3">
+                @foreach (var item in softwareRecords)
+                {
+                    <div class="border rounded-3 p-2 mb-2">
+                        <div class="fw-semibold">@item.SoftwareName</div>
+
+                        @if (!string.IsNullOrWhiteSpace(item.SetupDescription))
+                        {
+                            <div class="small text-muted">
+                                Описание: @item.SetupDescription
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(item.ClaimNumber))
+                        {
+                            <div class="small text-muted">
+                                Заявка: @item.ClaimNumber
+                            </div>
+                        }
+
+                        <form asp-controller="SoftwareRecord"
+                              asp-action="Delete"
+                              method="post"
+                              class="mt-2">
+                            <input type="hidden" name="id" value="@item.Id" />
+                            <input type="hidden" name="materialTechnicalValueId" value="@Model.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                Удалить
+                            </button>
+                        </form>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="mb-3">
+                <div class="muted-note">
+                    ПО пока не привязано.
+                </div>
+            </div>
+        }
+
+        <a asp-controller="SoftwareRecord"
+           asp-action="Create"
+           asp-route-materialTechnicalValueId="@Model.Id"
+           class="btn btn-outline-galaxy">
+            Добавить ПО
+        </a>
+    </div>
+</div>
+
+        <div class="col-lg-4">
+            <div class="section-card">
+                <div class="section-title">История списаний</div>
+                <div class="section-text">
+                    Списание оборудования с фиксацией количества и причины.
+                </div>
+
+                <div class="mb-3">
+                    <div class="muted-note">
+                        Текущий статус:
+                        @if (Model.Quantity > 0)
+                        {
+                            <strong class="text-success">оборудование активно</strong>
+                        }
+                        else
+                        {
+                            <strong class="text-danger">оборудование полностью списано</strong>
+                        }
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap">
+                    @if (Model.Quantity > 0)
+                    {
+                        <a asp-controller="EquipmentMovementHistory"
+                       asp-action="Create"
+                       asp-route-materialTechnicalValueId="@Model.Id"
+                       class="btn btn-outline-galaxy">
+                            Списать оборудование
+                        </a>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-outline-secondary" disabled>
+                            Полностью списано
+                        </button>
+                    }
+
+                    <a asp-controller="EquipmentMovementHistory"
+                       asp-action="Index"
+                       class="btn btn-outline-galaxy">
+                        Все списания
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

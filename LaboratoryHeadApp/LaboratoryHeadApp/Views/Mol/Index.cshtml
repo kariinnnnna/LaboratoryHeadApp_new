@@ -1,0 +1,162 @@
+﻿@{
+    ViewData["Title"] = "Модуль МОЛ и оборудования";
+    Layout = "_Layout";
+}
+
+<style>
+    :root {
+        --galaxy: #0B1F5C;
+        --planetary: #334EAC;
+        --sky: #D0E3FF;
+    }
+
+    .btn-galaxy {
+        background-color: var(--galaxy);
+        border-color: var(--galaxy);
+        color: #fff;
+    }
+
+        .btn-galaxy:hover,
+        .btn-galaxy:focus {
+            background-color: var(--planetary);
+            border-color: var(--planetary);
+            color: #fff;
+        }
+
+    .btn-outline-galaxy {
+        color: var(--galaxy);
+        border-color: var(--galaxy);
+    }
+
+        .btn-outline-galaxy:hover,
+        .btn-outline-galaxy:focus {
+            background-color: var(--galaxy);
+            color: #fff;
+        }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Модуль материально ответственных лиц и оборудования</h2>
+        <a asp-controller="Home" asp-action="Index"
+           class="btn btn-outline-galaxy">
+            На главную
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- МОЛ -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Материально ответственные лица</h5>
+                    <p class="card-text">
+                        Справочник сотрудников, ответственных за оборудование и аудитории.
+                    </p>
+                    <ul class="small mb-3">
+                        <li>ФИО, должность, подразделение</li>
+                        <li>Контактная информация</li>
+                        <li>Связь с оборудованием</li>
+                    </ul>
+                    <div class="mt-auto">
+                        <a asp-controller="MaterialResponsiblePerson" asp-action="Index"
+                           class="btn btn-galaxy">
+                            Список МОЛ
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Аудитории -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Аудитории</h5>
+                    <p class="card-text">
+                        Список аудиторий, их типы, вместимость и возможность использования в расписании.
+                    </p>
+                    <ul class="small mb-3">
+                        <li>Номер и тип аудитории</li>
+                        <li>Вместимость</li>
+                        <li>Признак «Не использовать в расписании»</li>
+                    </ul>
+                    <div class="mt-auto">
+                        <a asp-controller="Classroom" asp-action="Index"
+                           class="btn btn-outline-galaxy">
+                            Список аудиторий
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Оборудование -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Материально-технические ценности</h5>
+                    <p class="card-text">
+                        Учёт оборудования, его инвентарных номеров, стоимости и расположения.
+                    </p>
+                    <ul class="small mb-3">
+                        <li>Инвентарный номер и название</li>
+                        <li>Описание, местоположение</li>
+                        <li>Установленное ПО</li>
+                    </ul>
+                    <div class="mt-auto">
+                        <a asp-controller="MaterialTechnicalValue" asp-action="Index"
+                           class="btn btn-outline-galaxy">
+                            Список оборудования
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ПО -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Программное обеспечение</h5>
+                    <p class="card-text">
+                        Учёт программного обеспечения, его лицензий и версий.
+                    </p>
+                    <ul class="small mb-3">
+                        <li>Название, версия, лицензия</li>
+                        <li>Описания и ключи</li>
+                        <li>Связь с оборудованием</li>
+                    </ul>
+                    <div class="mt-auto">
+                        <a asp-controller="Software" asp-action="Index"
+                           class="btn btn-outline-galaxy">
+                            Список ПО
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- История перемещений -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">История списания</h5>
+                    <p class="card-text">
+                        Справочник по списанию оборудования.
+                    </p>
+                    <ul class="small mb-3">
+                        <li>Дата перемещения, инвентарный номер</li>
+                        <li>Причины перемещения</li>
+                    </ul>
+                    <div class="mt-auto">
+                        <a asp-controller="EquipmentMovementHistory" asp-action="Index"
+                           class="btn btn-outline-galaxy">
+                            История списаний
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

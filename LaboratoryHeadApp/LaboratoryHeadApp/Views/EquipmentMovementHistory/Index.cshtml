@@ -1,0 +1,182 @@
+﻿@model List<MolServiceContracts.ViewModels.EquipmentMovementHistoryViewModel>
+
+@{
+    ViewData["Title"] = "История списаний";
+    Layout = "_Layout";
+}
+
+<style>
+    :root {
+        --galaxy: #0B1F5C;
+        --planetary: #334EAC;
+        --sky: #D0E3FF;
+        --ink: #0f172a;
+        --line: rgba(11, 31, 92, .18);
+        --card: #ffffff;
+        --soft: #f6f8ff;
+    }
+
+    .btn-galaxy {
+        background-color: var(--galaxy);
+        border-color: var(--galaxy);
+        color: #fff;
+    }
+
+        .btn-galaxy:hover,
+        .btn-galaxy:focus {
+            background-color: var(--planetary);
+            border-color: var(--planetary);
+            color: #fff;
+        }
+
+    .btn-outline-galaxy {
+        color: var(--galaxy);
+        border-color: var(--galaxy);
+    }
+
+        .btn-outline-galaxy:hover,
+        .btn-outline-galaxy:focus {
+            background-color: var(--galaxy);
+            color: #fff;
+        }
+
+    .page-title {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .table-card {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: var(--card);
+        overflow: hidden;
+        box-shadow: 0 8px 22px rgba(11, 31, 92, .06);
+    }
+
+    .table-card-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--line);
+        background: linear-gradient(180deg, #fff, var(--soft));
+    }
+
+    .table-wrap {
+        overflow-x: auto;
+    }
+
+    .table {
+        margin-bottom: 0;
+        min-width: 900px;
+    }
+
+        .table thead th {
+            white-space: nowrap;
+            background: #f8faff;
+            color: var(--galaxy);
+            border-bottom-width: 1px;
+        }
+
+        .table td,
+        .table th {
+            vertical-align: middle;
+        }
+
+    .reason-cell,
+    .comment-cell {
+        max-width: 240px;
+        word-break: break-word;
+    }
+
+    .empty-state {
+        padding: 28px 20px;
+        text-align: center;
+        color: #6c757d;
+    }
+
+    .badge-soft {
+        display: inline-block;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: #eef4ff;
+        color: var(--galaxy);
+        font-weight: 600;
+        font-size: .9rem;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="page-title">
+        <div>
+            <h2 class="mb-1">История списаний оборудования</h2>
+            <div class="text-muted">Журнал всех операций списания</div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a asp-controller="MaterialTechnicalValue" asp-action="Index" class="btn btn-outline-galaxy">
+                К оборудованию
+            </a>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <div class="table-card-header">
+            <strong>Всего записей: @Model.Count</strong>
+        </div>
+
+        @if (Model.Any())
+        {
+            <div class="table-wrap">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Дата списания</th>
+                            <th>Оборудование</th>
+                            <th>Количество</th>
+                            <th>Причина</th>
+                            <th>Комментарий</th>
+                            <th class="text-end">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.MoveDate.ToString("dd.MM.yyyy HH:mm")</td>
+                                <td>
+                                    <div class="fw-semibold">@item.MaterialTechnicalValueName</div>
+                                    <div class="text-muted small">ID оборудования: @item.MaterialTechnicalValueId</div>
+                                </td>
+                                <td>
+                                    <span class="badge-soft">@item.Quantity</span>
+                                </td>
+                                <td class="reason-cell">
+                                    @(string.IsNullOrWhiteSpace(item.Reason) ? "Не указано" : item.Reason)
+                                </td>
+                                <td class="comment-cell">
+                                    @(string.IsNullOrWhiteSpace(item.Comment) ? "—" : item.Comment)
+                                </td>
+                                <td class="text-end">
+                                    <a asp-controller="MaterialTechnicalValue"
+                               asp-action="Details"
+                               asp-route-id="@item.MaterialTechnicalValueId"
+                               class="btn btn-sm btn-outline-galaxy">
+                                        Карточка оборудования
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                Пока нет ни одной записи о списании оборудования.
+            </div>
+        }
+    </div>
+</div>

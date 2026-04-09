@@ -1,0 +1,242 @@
+﻿@model LaboratoryHeadApp.Models.ClassroomReservationCreateViewModel
+
+@{
+    ViewData["Title"] = "Бронирование аудитории";
+    Layout = "_Layout";
+}
+
+<style>
+    :root {
+        --galaxy: #0B1F5C;
+        --planetary: #334EAC;
+        --line: rgba(11, 31, 92, .18);
+        --soft: #f6f8ff;
+    }
+
+    .btn-galaxy {
+        background-color: var(--galaxy);
+        border-color: var(--galaxy);
+        color: #fff;
+    }
+
+        .btn-galaxy:hover,
+        .btn-galaxy:focus {
+            background-color: var(--planetary);
+            border-color: var(--planetary);
+            color: #fff;
+        }
+
+    .btn-outline-galaxy {
+        color: var(--galaxy);
+        border-color: var(--galaxy);
+    }
+
+        .btn-outline-galaxy:hover,
+        .btn-outline-galaxy:focus {
+            background-color: var(--galaxy);
+            color: #fff;
+        }
+
+    .card-soft {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: #fff;
+    }
+
+    .section-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--galaxy);
+        margin-bottom: 10px;
+    }
+
+    .manual-link {
+        display: inline-block;
+        margin-top: 6px;
+        font-size: 13px;
+        color: var(--planetary);
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+        .manual-link:hover {
+            text-decoration: underline;
+            color: var(--galaxy);
+        }
+
+    .manual-block {
+        display: none;
+        margin-top: 10px;
+    }
+
+        .manual-block.show {
+            display: block;
+        }
+
+    .hint {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 4px;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+        <h2 class="mb-0">Бронирование аудитории</h2>
+
+        <a asp-controller="Schedule"
+           asp-action="LessonsRooms"
+           asp-route-date="@Model.Date.ToString("yyyy-MM-dd")"
+           class="btn btn-outline-galaxy">
+            Назад к расписанию аудиторий
+        </a>
+    </div>
+
+    @if (!ViewData.ModelState.IsValid && ViewData.ModelState[string.Empty]?.Errors.Count > 0)
+    {
+        <div class="alert alert-danger mb-3">
+            @foreach (var error in ViewData.ModelState[string.Empty]!.Errors)
+            {
+                <div>@error.ErrorMessage</div>
+            }
+        </div>
+    }
+
+    <div class="card-soft p-4">
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+
+            <div class="section-title">Когда</div>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <label asp-for="Date" class="form-label"></label>
+                    <input asp-for="Date" type="date" class="form-control" />
+                    <span asp-validation-for="Date" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="LessonTimeId" class="form-label"></label>
+                    <select asp-for="LessonTimeId" asp-items="Model.LessonTimes" class="form-select">
+                        <option value="">Выберите пару</option>
+                    </select>
+                    <div class="hint">Либо выберите пару, либо укажите время вручную.</div>
+                    <span asp-validation-for="LessonTimeId" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-2">
+                    <label asp-for="StartTime" class="form-label"></label>
+                    <input asp-for="StartTime" type="time" class="form-control" />
+                    <span asp-validation-for="StartTime" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-2">
+                    <label asp-for="EndTime" class="form-label"></label>
+                    <input asp-for="EndTime" type="time" class="form-control" />
+                    <span asp-validation-for="EndTime" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="section-title">Где и для кого</div>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <label asp-for="SelectedClassroomId" class="form-label">Аудитория</label>
+                    <select asp-for="SelectedClassroomId" asp-items="Model.Classrooms" class="form-select">
+                        <option value="">Выберите аудиторию</option>
+                    </select>
+
+                    <a href="#" class="manual-link" data-target="manual-classroom">
+                        Нет в списке? Ввести вручную
+                    </a>
+
+                    <div id="manual-classroom" class="manual-block">
+                        <input asp-for="ClassroomNumber" class="form-control" placeholder="Например, 3-418/2" />
+                        <span asp-validation-for="ClassroomNumber" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="SelectedTeacherId" class="form-label">Преподаватель</label>
+                    <select asp-for="SelectedTeacherId" asp-items="Model.Teachers" class="form-select">
+                        <option value="">Выберите преподавателя</option>
+                    </select>
+
+                    <a href="#" class="manual-link" data-target="manual-teacher">
+                        Нет в списке? Ввести вручную
+                    </a>
+
+                    <div id="manual-teacher" class="manual-block">
+                        <input asp-for="TeacherName" class="form-control" placeholder="ФИО преподавателя" />
+                        <span asp-validation-for="TeacherName" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="SelectedGroupId" class="form-label">Группа</label>
+                    <select asp-for="SelectedGroupId" asp-items="Model.Groups" class="form-select">
+                        <option value="">Выберите группу</option>
+                    </select>
+
+                    <a href="#" class="manual-link" data-target="manual-group">
+                        Нет в списке? Ввести вручную
+                    </a>
+
+                    <div id="manual-group" class="manual-block">
+                        <input asp-for="GroupName" class="form-control" placeholder="Например, ПИбд-41" />
+                        <span asp-validation-for="GroupName" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-title">Что проводится</div>
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label asp-for="Subject" class="form-label"></label>
+                    <input asp-for="Subject" class="form-control" placeholder="Например, Консультация по ВКР" />
+                    <span asp-validation-for="Subject" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="Comment" class="form-label"></label>
+                    <input asp-for="Comment" class="form-control" placeholder="Комментарий" />
+                    <span asp-validation-for="Comment" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-galaxy">
+                    Забронировать
+                </button>
+
+                <a asp-controller="Schedule"
+                   asp-action="LessonsRooms"
+                   asp-route-date="@Model.Date.ToString("yyyy-MM-dd")"
+                   class="btn btn-outline-galaxy">
+                    Отмена
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.querySelectorAll('.manual-link').forEach(link => {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                const targetId = this.getAttribute('data-target');
+                const block = document.getElementById(targetId);
+
+                if (!block) return;
+
+                block.classList.toggle('show');
+
+                this.textContent = block.classList.contains('show')
+                    ? 'Скрыть ручной ввод'
+                    : 'Нет в списке? Ввести вручную';
+            });
+        });
+    </script>
+}
