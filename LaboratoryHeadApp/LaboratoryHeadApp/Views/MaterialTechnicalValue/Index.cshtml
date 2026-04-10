@@ -115,6 +115,19 @@
         .row-writtenoff td {
             color: #6c757d;
         }
+
+    .modal-content {
+        border-radius: 18px;
+        border: 1px solid var(--line);
+    }
+
+    .modal-header {
+        border-bottom: 1px solid var(--line);
+    }
+
+    .modal-footer {
+        border-top: 1px solid var(--line);
+    }
 </style>
 
 <div class="container py-4">
@@ -124,9 +137,14 @@
             <a asp-controller="MOL" asp-action="Index" class="btn btn-outline-galaxy">
                 Назад
             </a>
-            <a asp-controller="OneCImport" asp-action="ImportInventory" class="btn btn-outline-galaxy">
+
+            <button type="button"
+                    class="btn btn-outline-galaxy"
+                    data-bs-toggle="modal"
+                    data-bs-target="#importInventoryModal">
                 Синхронизировать с 1С
-            </a>
+            </button>
+
             <a asp-controller="MaterialTechnicalValue" asp-action="Create" class="btn btn-galaxy">
                 Добавить МТЦ
             </a>
@@ -137,6 +155,13 @@
     {
         <div class="alert alert-danger">
             @TempData["ErrorMessage"]
+        </div>
+    }
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
         </div>
     }
 
@@ -151,15 +176,15 @@
             else
             {
                 @*<form method="get" asp-action="Index" class="page-size-form">
-                    <label for="pageSize" class="form-label mb-0">Показывать по:</label>
-                    <select id="pageSize" name="pageSize" class="form-select" onchange="this.form.submit()">
-                        <option value="5" selected="@(pageSize == 5)">5</option>
-                        <option value="10" selected="@(pageSize == 10)">10</option>
-                        <option value="20" selected="@(pageSize == 20)">20</option>
-                        <option value="50" selected="@(pageSize == 50)">50</option>
-                    </select>
-                    <input type="hidden" name="page" value="1" />
-                </form>*@
+            <label for="pageSize" class="form-label mb-0">Показывать по:</label>
+            <select id="pageSize" name="pageSize" class="form-select" onchange="this.form.submit()">
+            <option value="5" selected="@(pageSize == 5)">5</option>
+            <option value="10" selected="@(pageSize == 10)">10</option>
+            <option value="20" selected="@(pageSize == 20)">20</option>
+            <option value="50" selected="@(pageSize == 50)">50</option>
+            </select>
+            <input type="hidden" name="page" value="1" />
+            </form>*@
 
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover align-middle mb-0">
@@ -177,7 +202,7 @@
                         <tbody>
                             @foreach (var item in Model)
                             {
-                                <tr>
+                                <tr class="@(item.Quantity == 0 ? "row-writtenoff" : "")">
                                     <td>@item.InventoryNumber</td>
                                     <td>@item.FullName</td>
                                     <td>
@@ -193,7 +218,16 @@
                                             }
                                         </div>
                                     </td>
-                                    <td>@(string.IsNullOrWhiteSpace(item.ClassroomNumber) ? "Не закреплено" : item.ClassroomNumber)</td>
+                                    <td>
+                                        @if (item.Quantity == 0)
+                                        {
+                                            <span class="text-muted">Списано</span>
+                                        }
+                                        else
+                                        {
+                                            @(string.IsNullOrWhiteSpace(item.ClassroomNumber) ? "Не закреплено" : item.ClassroomNumber)
+                                        }
+                                    </td>
                                     <td>@item.MaterialResponsiblePersonName</td>
                                     <td>@item.Location</td>
                                     <td class="actions-cell">
@@ -259,3 +293,62 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="importInventoryModal" tabindex="-1" aria-labelledby="importInventoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importInventoryModalLabel">Синхронизация с 1С</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+
+            <form asp-controller="OneCImport" asp-action="ImportInventory" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="oneCUsername" class="form-label">Логин</label>
+                        <input type="text"
+                               id="oneCUsername"
+                               name="Username"
+                               class="form-control"
+                               placeholder="Введите логин"
+                               required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="oneCPassword" class="form-label">Пароль</label>
+                        <input type="password"
+                               id="oneCPassword"
+                               name="Password"
+                               class="form-control"
+                               placeholder="Введите пароль"
+                               required />
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        Отмена
+                    </button>
+                    <button type="submit" class="btn btn-galaxy">
+                        Запустить синхронизацию
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@if (TempData["OpenImportModal"] as string == "true")
+{
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var modalElement = document.getElementById('importInventoryModal');
+            if (modalElement) {
+                var modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            }
+        });
+    </script>
+}
