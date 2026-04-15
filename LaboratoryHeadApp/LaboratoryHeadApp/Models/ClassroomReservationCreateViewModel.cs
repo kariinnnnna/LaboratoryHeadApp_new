@@ -6,6 +6,8 @@ namespace LaboratoryHeadApp.Models
 {
     public class ClassroomReservationCreateViewModel
     {
+        public int Id { get; set; }
+
         [Required(ErrorMessage = "Дата обязательна")]
         [Display(Name = "Дата")]
         public DateTime Date { get; set; } = DateTime.Today;
@@ -17,7 +19,7 @@ namespace LaboratoryHeadApp.Models
         public int? ClassroomId { get; set; }
 
         [Display(Name = "Аудитория")]
-        public string ClassroomNumber { get; set; } = string.Empty;
+        public string? ClassroomNumber { get; set; }
 
         [Display(Name = "Преподаватель из справочника")]
         public int? SelectedTeacherId { get; set; }
@@ -26,7 +28,7 @@ namespace LaboratoryHeadApp.Models
         public int? TeacherId { get; set; }
 
         [Display(Name = "Преподаватель")]
-        public string TeacherName { get; set; } = string.Empty;
+        public string? TeacherName { get; set; }
 
         [Display(Name = "Группа из справочника")]
         public int? SelectedGroupId { get; set; }
@@ -35,7 +37,7 @@ namespace LaboratoryHeadApp.Models
         public int? GroupId { get; set; }
 
         [Display(Name = "Группа")]
-        public string GroupName { get; set; } = string.Empty;
+        public string? GroupName { get; set; }
 
         [Required(ErrorMessage = "Тема обязательна")]
         [Display(Name = "Тема")]

@@ -2,6 +2,7 @@
 using MolServiceContracts.BindingModels;
 using MolServiceContracts.SearchModels;
 using MolServiceContracts.ViewModels;
+using MolServiceContracts.ViewModels.Reports;
 
 namespace MOLServiceWebClient
 {
@@ -429,6 +430,31 @@ namespace MOLServiceWebClient
             }
 
             return await response.Content.ReadFromJsonAsync<SoftwareAssignToClassroomResultViewModel>();
+        }
+        public async Task<FullInventoryReportViewModel?> GetFullInventoryReportAsync()
+        {
+            var response = await _httpClient.GetAsync("api/InventoryReport/GetFullInventoryReport");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorText = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Ошибка API при получении общего отчёта: {errorText}");
+            }
+
+            return await response.Content.ReadFromJsonAsync<FullInventoryReportViewModel>();
+        }
+
+        public async Task<ClassroomsInventoryReportViewModel?> GetClassroomsInventoryReportAsync(ClassroomsInventoryReportBindingModel model)
+        {
+            var response = await _httpClient.PostAsJsonAsync("api/InventoryReport/GetClassroomsInventoryReport", model);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorText = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Ошибка API при получении отчёта по аудиториям: {errorText}");
+            }
+
+            return await response.Content.ReadFromJsonAsync<ClassroomsInventoryReportViewModel>();
         }
     }
 

@@ -236,6 +236,16 @@
         border-color: rgba(217, 119, 6, .35);
     }
 
+    .lesson-clickable {
+        cursor: pointer;
+        transition: .15s ease-in-out;
+    }
+
+        .lesson-clickable:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0,0,0,.08);
+        }
+
     .lesson .type {
         display: inline-flex;
         align-items: center;
@@ -358,6 +368,41 @@
     </div>
 </div>
 
+<div class="modal fade" id="reservationActionsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="border-radius: 16px;">
+            <div class="modal-header">
+                <h5 class="modal-title">Действия с бронью</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+
+            <div class="modal-body">
+                <div id="reservationModalText"></div>
+            </div>
+
+            <div class="modal-footer">
+                <a id="editReservationLink" href="#" class="btn btn-primary">
+                    Редактировать
+                </a>
+
+                <form asp-controller="ClassroomReservation"
+                      asp-action="Delete"
+                      method="post"
+                      class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="deleteReservationId" name="id" />
+                    <input type="hidden" id="deleteReservationDate" name="date" />
+                    <button type="submit"
+                            class="btn btn-outline-danger"
+                            onclick="return confirm('Удалить эту бронь?');">
+                        Удалить
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         const pairs = [
@@ -378,6 +423,7 @@
         const lessons = @Html.Raw(JsonSerializer.Serialize(
         Model.Lessons.Select(x => new
         {
+        id = x.Id,
         room = x.ClassroomNumber,
         pair = x.PairNumber,
         type = x.TypeName,
@@ -395,6 +441,13 @@
         const elGroup = document.getElementById("filterGroup");
         const elPrev = document.getElementById("prevDay");
         const elNext = document.getElementById("nextDay");
+
+        const modalElement = document.getElementById("reservationActionsModal");
+        const modalText = document.getElementById("reservationModalText");
+        const editLink = document.getElementById("editReservationLink");
+        const deleteId = document.getElementById("deleteReservationId");
+        const deleteDate = document.getElementById("deleteReservationDate");
+        const reservationModal = new bootstrap.Modal(modalElement);
 
         elDate.value = "@Model.SelectedDate";
 
@@ -479,7 +532,7 @@
 
                     for (const l of inCell) {
                         const card = document.createElement("div");
-                        card.className = "lesson" + (!l.isImported ? " lesson-manual" : "");
+                        card.className = "lesson" + (!l.isImported ? " lesson-manual lesson-clickable" : "");
 
                         card.innerHTML = `
                                     <div class="type">${escapeHtml(mapType(l.type ?? ""))}</div>
@@ -489,12 +542,34 @@
                                     <div class="meta"><b>Преп.</b><br>${escapeHtml(l.teacher ?? "")}</div>
                                     <div class="meta"><b>Группа</b><br>${escapeHtml(l.group ?? "")}</div>
                                 `;
+
+                        if (!l.isImported) {
+                            card.addEventListener("click", () => openReservationActions(l));
+                        }
+
                         slot.appendChild(card);
                     }
 
                     elTable.appendChild(slot);
                 }
             }
+        }
+
+        function openReservationActions(lesson) {
+            modalText.innerHTML = `
+                        <div><strong>Тема:</strong> ${escapeHtml(lesson.title ?? "")}</div>
+                        <div><strong>Тип:</strong> ${escapeHtml(mapType(lesson.type ?? ""))}</div>
+                        <div><strong>Аудитория:</strong> ${escapeHtml(lesson.room ?? "")}</div>
+                        <div><strong>Преподаватель:</strong> ${escapeHtml(lesson.teacher ?? "")}</div>
+                        <div><strong>Группа:</strong> ${escapeHtml(lesson.group ?? "")}</div>
+                        ${lesson.subgroup ? `<div><strong>Комментарий:</strong> ${escapeHtml(lesson.subgroup)}</div>` : ""}
+                    `;
+
+            editLink.href = `/ClassroomReservation/Edit/${lesson.id}`;
+            deleteId.value = lesson.id ?? "";
+            deleteDate.value = elDate.value;
+
+            reservationModal.show();
         }
 
         function mapType(type) {

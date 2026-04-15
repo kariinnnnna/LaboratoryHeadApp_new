@@ -1,0 +1,194 @@
+﻿@model MolServiceContracts.ViewModels.Reports.ClassroomsInventoryReportViewModel
+
+@{
+    ViewData["Title"] = "Отчёт по аудиториям";
+    Layout = "_Layout";
+}
+
+<style>
+    :root {
+        --galaxy: #0B1F5C;
+        --planetary: #334EAC;
+        --line: rgba(11, 31, 92, .18);
+    }
+
+    .btn-galaxy {
+        background-color: var(--galaxy);
+        border-color: var(--galaxy);
+        color: #fff;
+    }
+
+        .btn-galaxy:hover,
+        .btn-galaxy:focus {
+            background-color: var(--planetary);
+            border-color: var(--planetary);
+            color: #fff;
+        }
+
+    .btn-outline-galaxy {
+        color: var(--galaxy);
+        border-color: var(--galaxy);
+    }
+
+        .btn-outline-galaxy:hover,
+        .btn-outline-galaxy:focus {
+            background-color: var(--galaxy);
+            color: #fff;
+        }
+
+    .report-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+    }
+
+    .report-meta {
+        color: #64748b;
+        font-size: 14px;
+    }
+
+    .section-box {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: #fff;
+        padding: 18px;
+        box-shadow: 0 1px 2px rgba(0,0,0,.04);
+    }
+
+        .section-box + .section-box {
+            margin-top: 18px;
+        }
+
+    .section-title {
+        color: var(--galaxy);
+        font-weight: 800;
+        margin-bottom: 14px;
+    }
+
+    .report-table th {
+        white-space: nowrap;
+    }
+
+    @@media print {
+        .no-print {
+            display: none !important;
+        }
+
+        .container {
+            max-width: 100% !important;
+        }
+
+        .section-box {
+            border: none;
+            box-shadow: none;
+            padding: 0;
+            page-break-inside: avoid;
+        }
+
+            .section-box + .section-box {
+                margin-top: 28px;
+            }
+    }
+</style>
+
+<div class="container py-4">
+    <div class="report-header no-print">
+        <div>
+            <h2 class="mb-1">Отчёт по выбранным аудиториям</h2>
+            <div class="report-meta">
+                Дата формирования: @Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 flex-wrap">
+            <a asp-controller="InventoryReport"
+               asp-action="SelectClassrooms"
+               class="btn btn-outline-galaxy">
+                Назад к выбору аудиторий
+            </a>
+
+            <form asp-controller="InventoryReport"
+                  asp-action="DownloadClassroomsInventoryPdf"
+                  method="post"
+                  class="d-inline">
+                @Html.AntiForgeryToken()
+
+                @foreach (var classroom in Model.Classrooms)
+                {
+                    <input type="hidden" name="ClassroomIds" value="@classroom.ClassroomId" />
+                }
+
+                <button type="submit" class="btn btn-outline-galaxy">
+                    Скачать PDF
+                </button>
+            </form>
+
+            <button type="button" class="btn btn-galaxy" onclick="window.print()">
+                Печать
+            </button>
+        </div>
+    </div>
+
+    <div class="d-none d-print-block mb-3">
+        <h3>Отчёт по выбранным аудиториям</h3>
+        <div>Дата формирования: @Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</div>
+    </div>
+
+    @if (Model.Classrooms == null || !Model.Classrooms.Any())
+    {
+        <div class="alert alert-warning">
+            Нет данных для отображения.
+        </div>
+    }
+    else
+    {
+        @foreach (var classroom in Model.Classrooms)
+        {
+            <div class="section-box">
+                <h4 class="section-title">Аудитория @classroom.ClassroomNumber</h4>
+
+                @if (classroom.Items == null || !classroom.Items.Any())
+                {
+                    <div class="alert alert-warning mb-0">
+                        Для этой аудитории оборудование не найдено.
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm align-middle report-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 60px;">№</th>
+                                    <th>Инвентарный номер</th>
+                                    <th>Наименование</th>
+                                    <th style="width: 90px;">Кол-во</th>
+                                    <th>МОЛ</th>
+                                    <th>Описание</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < classroom.Items.Count; i++)
+                                {
+                                    var item = classroom.Items[i];
+
+                                    <tr>
+                                        <td>@(i + 1)</td>
+                                        <td>@item.InventoryNumber</td>
+                                        <td>@item.FullName</td>
+                                        <td>@item.Quantity</td>
+                                        <td>@item.MaterialResponsiblePersonName</td>
+                                        <td>@item.Description</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>

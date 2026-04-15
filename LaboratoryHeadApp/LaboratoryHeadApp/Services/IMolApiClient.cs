@@ -1,5 +1,6 @@
 ﻿using MolServiceContracts.BindingModels;
 using MolServiceContracts.ViewModels;
+using MolServiceContracts.ViewModels.Reports;
 
 namespace MOLServiceWebClient
 {
@@ -50,5 +51,7 @@ namespace MOLServiceWebClient
 
         Task<bool> ImportClassroomsFromCoreAsync();
         Task<SoftwareAssignToClassroomResultViewModel?> AssignSoftwareToClassroomAsync(SoftwareAssignToClassroomBindingModel model);
+        Task<FullInventoryReportViewModel?> GetFullInventoryReportAsync();
+        Task<ClassroomsInventoryReportViewModel?> GetClassroomsInventoryReportAsync(ClassroomsInventoryReportBindingModel model);
     }
 }

@@ -1,0 +1,106 @@
+﻿@{
+    ViewData["Title"] = "Отчёты";
+    Layout = "_Layout";
+}
+
+<style>
+    :root {
+        --galaxy: #0B1F5C;
+        --planetary: #334EAC;
+        --sky: #D0E3FF;
+    }
+
+    .btn-galaxy {
+        background-color: var(--galaxy);
+        border-color: var(--galaxy);
+        color: #fff;
+    }
+
+        .btn-galaxy:hover,
+        .btn-galaxy:focus {
+            background-color: var(--planetary);
+            border-color: var(--planetary);
+            color: #fff;
+        }
+
+    .btn-outline-galaxy {
+        color: var(--galaxy);
+        border-color: var(--galaxy);
+    }
+
+        .btn-outline-galaxy:hover,
+        .btn-outline-galaxy:focus {
+            background-color: var(--galaxy);
+            color: #fff;
+        }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Отчёты по инвентаризации</h2>
+        <a asp-controller="Mol" asp-action="Index"
+           class="btn btn-outline-galaxy">
+            Назад к модулю
+        </a>
+    </div>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger mb-3">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Общий отчёт по оборудованию</h5>
+                    <p class="card-text">
+                        Выводит всё оборудование кафедры ИС, включая оборудование,
+                        которое не привязано к аудитории.
+                    </p>
+                    <ul class="small mb-3">
+                        <li>Инвентарный номер</li>
+                        <li>Наименование оборудования</li>
+                        <li>Аудитория или отсутствие привязки</li>
+                        <li>Материально ответственное лицо</li>
+                    </ul>
+
+                    <div class="mt-auto">
+                        <a asp-controller="InventoryReport"
+                           asp-action="FullInventory"
+                           class="btn btn-galaxy">
+                            Сформировать отчёт
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Отчёт по выбранным аудиториям</h5>
+                    <p class="card-text">
+                        Позволяет выбрать одну, несколько или все аудитории и получить
+                        отдельную таблицу оборудования по каждой аудитории.
+                    </p>
+                    <ul class="small mb-3">
+                        <li>Выбор аудиторий галочками</li>
+                        <li>Отдельный блок по каждой аудитории</li>
+                        <li>Удобно для печати и проведения инвентаризации</li>
+                    </ul>
+
+                    <div class="mt-auto">
+                        <a asp-controller="InventoryReport"
+                           asp-action="SelectClassrooms"
+                           class="btn btn-outline-galaxy">
+                            Выбрать аудитории
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

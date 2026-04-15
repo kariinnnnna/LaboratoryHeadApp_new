@@ -79,20 +79,21 @@ namespace LaboratoryHeadApp.Controllers
                 Teachers = teacherNames,
                 Groups = groupNames,
                 Lessons = dayItems
-                    .Select(x => new LessonsRoomsItemViewModel
-                    {
-                        ClassroomNumber = x.ClassroomNumber ?? string.Empty,
-                        PairNumber = x.PairNumber,
-                        TypeName = x.TypeName,
-                        Subject = x.Subject,
-                        TeacherName = x.TeacherName ?? string.Empty,
-                        GroupName = x.GroupName ?? string.Empty,
-                        Subgroup = x.Comment ?? string.Empty,
-                        IsImported = x.IsImported
-                    })
-                    .OrderBy(x => x.ClassroomNumber)
-                    .ThenBy(x => x.PairNumber)
-                    .ToList()
+                .Select(x => new LessonsRoomsItemViewModel
+                {
+                    Id = x.Id,
+                    ClassroomNumber = x.ClassroomNumber ?? string.Empty,
+                    PairNumber = x.PairNumber,
+                    TypeName = x.TypeName,
+                    Subject = x.Subject,
+                    TeacherName = x.TeacherName ?? string.Empty,
+                    GroupName = x.GroupName ?? string.Empty,
+                    Subgroup = x.Comment ?? string.Empty,
+                    IsImported = x.IsImported
+                })
+                .OrderBy(x => x.ClassroomNumber)
+                .ThenBy(x => x.PairNumber)
+                .ToList()
             };
 
             return View(model);

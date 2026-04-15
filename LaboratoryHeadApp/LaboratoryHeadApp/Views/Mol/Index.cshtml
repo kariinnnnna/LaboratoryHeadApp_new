@@ -101,7 +101,7 @@
                     </p>
                     <ul class="small mb-3">
                         <li>Инвентарный номер и название</li>
-                        <li>Описание, местоположение</li>
+                        <li>Описание</li>
                         <li>Установленное ПО</li>
                     </ul>
                     <div class="mt-auto">
@@ -153,6 +153,28 @@
                         <a asp-controller="EquipmentMovementHistory" asp-action="Index"
                            class="btn btn-outline-galaxy">
                             История списаний
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Отчеты -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Отчёты</h5>
+                    <p class="card-text">
+                        Формирование инвентаризационных отчётов по оборудованию кафедры.
+                    </p>
+                    <ul class="small mb-3">
+                        <li>Общий отчёт по оборудованию кафедры ИС</li>
+                        <li>Отчёт по выбранным аудиториям</li>
+                    </ul>
+                    <div class="mt-auto">
+                        <a asp-controller="InventoryReport" asp-action="Index"
+                           class="btn btn-outline-galaxy">
+                            Открыть отчёты
                         </a>
                     </div>
                 </div>

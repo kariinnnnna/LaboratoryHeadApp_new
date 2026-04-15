@@ -2,6 +2,8 @@
 {
     public class LessonsRoomsItemViewModel
     {
+        public int Id { get; set; }
+
         public string ClassroomNumber { get; set; } = string.Empty;
         public int? PairNumber { get; set; }
         public string TypeName { get; set; } = string.Empty;

@@ -29,7 +29,7 @@ namespace LaboratoryHeadApp.Controllers
             var model = new ClassroomReservationCreateViewModel
             {
                 Date = date ?? DateTime.Today,
-                ClassroomNumber = classroomNumber ?? string.Empty
+                ClassroomNumber = classroomNumber
             };
 
             await FillDictionaries(model);
@@ -40,72 +40,188 @@ namespace LaboratoryHeadApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ClassroomReservationCreateViewModel model)
         {
-            await FillDictionaries(model);
+            return await SaveReservation(model, isEdit: false);
+        }
 
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var item = await _scheduleApiClient.GetScheduleItemAsync(id);
+            if (item == null)
+            {
+                TempData["ErrorMessage"] = "Бронь не найдена.";
+                return RedirectToAction("LessonsRooms", "Schedule");
+            }
+
+            if (item.IsImported)
+            {
+                TempData["ErrorMessage"] = "Редактировать можно только вручную созданные брони.";
+                return RedirectToAction("LessonsRooms", "Schedule",
+                    new { date = item.Date.ToString("yyyy-MM-dd") });
+            }
+
+            var model = new ClassroomReservationCreateViewModel
+            {
+                Id = item.Id,
+                Date = item.Date.Date,
+
+                SelectedClassroomId = item.ClassroomId,
+                ClassroomId = item.ClassroomId,
+                ClassroomNumber = item.ClassroomNumber,
+
+                SelectedTeacherId = item.TeacherId,
+                TeacherId = item.TeacherId,
+                TeacherName = item.TeacherName,
+
+                SelectedGroupId = item.GroupId,
+                GroupId = item.GroupId,
+                GroupName = item.GroupName,
+
+                Subject = item.Subject,
+                LessonTimeId = item.LessonTimeId,
+                StartTime = item.StartTime,
+                EndTime = item.EndTime,
+                Comment = item.Comment
+            };
+
+            await FillDictionaries(model);
+            return View("Create", model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(ClassroomReservationCreateViewModel model)
+        {
+            return await SaveReservation(model, isEdit: true);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id, DateTime date)
+        {
+            try
+            {
+                var item = await _scheduleApiClient.GetScheduleItemAsync(id);
+                if (item == null)
+                {
+                    TempData["ErrorMessage"] = "Бронь не найдена.";
+                    return RedirectToAction("LessonsRooms", "Schedule",
+                        new { date = date.ToString("yyyy-MM-dd") });
+                }
+
+                if (item.IsImported)
+                {
+                    TempData["ErrorMessage"] = "Удалять можно только вручную созданные брони.";
+                    return RedirectToAction("LessonsRooms", "Schedule",
+                        new { date = date.ToString("yyyy-MM-dd") });
+                }
+
+                await _scheduleApiClient.DeleteScheduleItemAsync(id);
+
+                TempData["SuccessMessage"] = "Бронь удалена.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+
+            return RedirectToAction("LessonsRooms", "Schedule",
+                new { date = date.ToString("yyyy-MM-dd") });
+        }
+
+        private async Task<IActionResult> SaveReservation(
+            ClassroomReservationCreateViewModel model,
+            bool isEdit)
+        {
+            await FillDictionaries(model);
             ApplySelectedDictionaryValues(model);
+
+            model.ClassroomNumber = string.IsNullOrWhiteSpace(model.ClassroomNumber)
+                ? null
+                : model.ClassroomNumber.Trim();
+
+            model.TeacherName = string.IsNullOrWhiteSpace(model.TeacherName)
+                ? null
+                : model.TeacherName.Trim();
+
+            model.GroupName = string.IsNullOrWhiteSpace(model.GroupName)
+                ? null
+                : model.GroupName.Trim();
 
             if (string.IsNullOrWhiteSpace(model.ClassroomNumber))
             {
-                ModelState.AddModelError(nameof(model.ClassroomNumber), "Укажите аудиторию или выберите ее из списка.");
+                ModelState.AddModelError(nameof(model.ClassroomNumber),
+                    "Укажите аудиторию или выберите ее из списка.");
             }
 
             if (string.IsNullOrWhiteSpace(model.TeacherName))
             {
-                ModelState.AddModelError(nameof(model.TeacherName), "Укажите преподавателя или выберите его из списка.");
+                ModelState.AddModelError(nameof(model.TeacherName),
+                    "Укажите преподавателя или выберите его из списка.");
             }
 
             if (string.IsNullOrWhiteSpace(model.GroupName))
             {
-                ModelState.AddModelError(nameof(model.GroupName), "Укажите группу или выберите ее из списка.");
+                ModelState.AddModelError(nameof(model.GroupName),
+                    "Укажите группу или выберите ее из списка.");
             }
 
-            if (!model.LessonTimeId.HasValue && (!model.StartTime.HasValue || !model.EndTime.HasValue))
+            if (!model.LessonTimeId.HasValue &&
+                (!model.StartTime.HasValue || !model.EndTime.HasValue))
             {
-                ModelState.AddModelError("", "Укажите либо пару, либо время начала и окончания.");
+                ModelState.AddModelError("",
+                    "Укажите либо пару, либо время начала и окончания.");
             }
 
             if (!ModelState.IsValid)
             {
-                return View(model);
+                return View("Create", model);
             }
 
             try
             {
                 var binding = new ScheduleItemBindingModel
                 {
+                    Id = model.Id,
                     Type = ScheduleItemType.Consultation,
                     Date = DateTime.SpecifyKind(model.Date.Date, DateTimeKind.Utc),
+
                     LessonTimeId = model.LessonTimeId,
                     StartTime = model.LessonTimeId.HasValue ? null : model.StartTime,
                     EndTime = model.LessonTimeId.HasValue ? null : model.EndTime,
 
                     ClassroomId = model.ClassroomId,
-                    ClassroomNumber = model.ClassroomNumber.Trim(),
+                    ClassroomNumber = model.ClassroomNumber,
 
                     TeacherId = model.TeacherId,
-                    TeacherName = model.TeacherName.Trim(),
+                    TeacherName = model.TeacherName,
 
                     GroupId = model.GroupId,
-                    GroupName = model.GroupName.Trim(),
+                    GroupName = model.GroupName,
 
                     Subject = model.Subject,
                     Comment = model.Comment,
                     IsImported = false
                 };
 
-                await _scheduleApiClient.CreateScheduleItemAsync(binding);
-
-                TempData["SuccessMessage"] = "Бронирование аудитории успешно создано.";
-
-                return RedirectToAction("LessonsRooms", "Schedule", new
+                if (isEdit)
                 {
-                    date = model.Date.ToString("yyyy-MM-dd")
-                });
+                    await _scheduleApiClient.UpdateScheduleItemAsync(binding);
+                    TempData["SuccessMessage"] = "Бронь успешно обновлена.";
+                }
+                else
+                {
+                    await _scheduleApiClient.CreateScheduleItemAsync(binding);
+                    TempData["SuccessMessage"] = "Бронирование аудитории успешно создано.";
+                }
+
+                return RedirectToAction("LessonsRooms", "Schedule",
+                    new { date = model.Date.ToString("yyyy-MM-dd") });
             }
             catch (Exception ex)
             {
                 ModelState.AddModelError(string.Empty, ex.Message);
-                return View(model);
+                return View("Create", model);
             }
         }
 
@@ -160,7 +276,9 @@ namespace LaboratoryHeadApp.Controllers
         {
             if (model.SelectedTeacherId.HasValue)
             {
-                var selectedTeacher = model.Teachers.FirstOrDefault(x => x.Value == model.SelectedTeacherId.Value.ToString());
+                var selectedTeacher = model.Teachers
+                    .FirstOrDefault(x => x.Value == model.SelectedTeacherId.Value.ToString());
+
                 if (selectedTeacher != null)
                 {
                     model.TeacherId = model.SelectedTeacherId;
@@ -170,7 +288,9 @@ namespace LaboratoryHeadApp.Controllers
 
             if (model.SelectedGroupId.HasValue)
             {
-                var selectedGroup = model.Groups.FirstOrDefault(x => x.Value == model.SelectedGroupId.Value.ToString());
+                var selectedGroup = model.Groups
+                    .FirstOrDefault(x => x.Value == model.SelectedGroupId.Value.ToString());
+
                 if (selectedGroup != null)
                 {
                     model.GroupId = model.SelectedGroupId;
@@ -180,7 +300,9 @@ namespace LaboratoryHeadApp.Controllers
 
             if (model.SelectedClassroomId.HasValue)
             {
-                var selectedClassroom = model.Classrooms.FirstOrDefault(x => x.Value == model.SelectedClassroomId.Value.ToString());
+                var selectedClassroom = model.Classrooms
+                    .FirstOrDefault(x => x.Value == model.SelectedClassroomId.Value.ToString());
+
                 if (selectedClassroom != null)
                 {
                     model.ClassroomId = model.SelectedClassroomId;

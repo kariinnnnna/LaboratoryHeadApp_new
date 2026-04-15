@@ -1,0 +1,174 @@
+﻿@model LaboratoryHeadApp.Models.InventoryReportClassroomSelectionViewModel
+
+@{
+    ViewData["Title"] = "Выбор аудиторий";
+    Layout = "_Layout";
+}
+
+<style>
+    :root {
+        --galaxy: #0B1F5C;
+        --planetary: #334EAC;
+        --sky: #D0E3FF;
+        --line: rgba(11, 31, 92, .18);
+    }
+
+    .btn-galaxy {
+        background-color: var(--galaxy);
+        border-color: var(--galaxy);
+        color: #fff;
+    }
+
+        .btn-galaxy:hover,
+        .btn-galaxy:focus {
+            background-color: var(--planetary);
+            border-color: var(--planetary);
+            color: #fff;
+        }
+
+    .btn-outline-galaxy {
+        color: var(--galaxy);
+        border-color: var(--galaxy);
+    }
+
+        .btn-outline-galaxy:hover,
+        .btn-outline-galaxy:focus {
+            background-color: var(--galaxy);
+            color: #fff;
+        }
+
+    .report-box {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: #fff;
+        padding: 18px;
+        box-shadow: 0 1px 2px rgba(0,0,0,.04);
+    }
+
+    .classroom-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .classroom-item {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px 14px;
+        background: #fff;
+    }
+
+    .toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+    }
+
+    @@media (max-width: 992px) {
+        .classroom-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .classroom-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Отчёт по выбранным аудиториям</h2>
+            <div class="text-muted">Выберите аудитории, которые нужно включить в инвентаризационный отчёт.</div>
+        </div>
+
+        <a asp-controller="InventoryReport"
+           asp-action="Index"
+           class="btn btn-outline-galaxy">
+            Назад к отчётам
+        </a>
+    </div>
+
+    <div class="report-box">
+        <form asp-controller="InventoryReport" asp-action="ClassroomsInventory" method="post">
+            @Html.AntiForgeryToken()
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3"></div>
+            }
+
+            <div class="toolbar">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="selectAll" />
+                    <label class="form-check-label fw-semibold" for="selectAll">
+                        Выбрать все аудитории
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-galaxy">
+                    Сформировать отчёт
+                </button>
+            </div>
+
+            @if (Model.Classrooms == null || !Model.Classrooms.Any())
+            {
+                <div class="alert alert-warning mb-0">
+                    Аудитории не найдены.
+                </div>
+            }
+            else
+            {
+                <div class="classroom-grid">
+                    @for (int i = 0; i < Model.Classrooms.Count; i++)
+                    {
+                        <div class="classroom-item">
+                            <input asp-for="Classrooms[i].ClassroomId" type="hidden" />
+                            <input asp-for="Classrooms[i].ClassroomNumber" type="hidden" />
+
+                            <div class="form-check">
+                                <input asp-for="Classrooms[i].IsSelected"
+                               class="form-check-input classroom-checkbox" />
+                                <label asp-for="Classrooms[i].IsSelected" class="form-check-label">
+                                    Аудитория @Model.Classrooms[i].ClassroomNumber
+                                </label>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const selectAll = document.getElementById("selectAll");
+            const checkboxes = document.querySelectorAll(".classroom-checkbox");
+
+            if (!selectAll || checkboxes.length === 0) return;
+
+            function syncSelectAll() {
+                selectAll.checked = Array.from(checkboxes).every(x => x.checked);
+            }
+
+            selectAll.addEventListener("change", function () {
+                checkboxes.forEach(x => x.checked = selectAll.checked);
+            });
+
+            checkboxes.forEach(x => {
+                x.addEventListener("change", syncSelectAll);
+            });
+
+            syncSelectAll();
+        });
+    </script>
+}

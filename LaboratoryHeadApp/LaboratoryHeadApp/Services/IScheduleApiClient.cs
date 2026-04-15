@@ -39,6 +39,9 @@ public interface IScheduleApiClient
     Task<bool> DeleteGroupAsync(int id);
     Task<bool> ImportGroupsFromCoreAsync();
     Task<bool> ImportAllFromCoreAsync();
+    Task<ScheduleItemViewModel?> GetScheduleItemAsync(int id);
+    Task<ScheduleItemViewModel?> UpdateScheduleItemAsync(ScheduleItemBindingModel model);
+    Task<bool> DeleteScheduleItemAsync(int id);
 
 
 }

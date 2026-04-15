@@ -315,5 +315,46 @@ public class ScheduleApiClient : IScheduleApiClient
 
         return true;
     }
+    public async Task<ScheduleItemViewModel?> GetScheduleItemAsync(int id)
+    {
+        var response = await _client.PostAsJsonAsync(
+            "api/ScheduleItem/GetElement",
+            new ScheduleItemSearchModel { Id = id });
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        return await response.Content.ReadFromJsonAsync<ScheduleItemViewModel>();
+    }
+
+    public async Task<ScheduleItemViewModel?> UpdateScheduleItemAsync(ScheduleItemBindingModel model)
+    {
+        var response = await _client.PostAsJsonAsync("api/ScheduleItem/Update", model);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorText = await response.Content.ReadAsStringAsync();
+            throw new Exception(errorText);
+        }
+
+        return await response.Content.ReadFromJsonAsync<ScheduleItemViewModel>();
+    }
+
+    public async Task<bool> DeleteScheduleItemAsync(int id)
+    {
+        var response = await _client.PostAsJsonAsync(
+            "api/ScheduleItem/Delete",
+            new ScheduleItemBindingModel { Id = id });
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorText = await response.Content.ReadAsStringAsync();
+            throw new Exception(errorText);
+        }
+
+        return await response.Content.ReadFromJsonAsync<bool>();
+    }
 
 }
