@@ -356,5 +356,19 @@ public class ScheduleApiClient : IScheduleApiClient
 
         return await response.Content.ReadFromJsonAsync<bool>();
     }
+    public async Task<ExternalScheduleImportResultViewModel?> ImportExternalScheduleAsync(ExternalScheduleImportBindingModel model)
+    {
+        var response = await _client.PostAsJsonAsync(
+            "api/ExternalScheduleImport/Import",
+            model);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorText = await response.Content.ReadAsStringAsync();
+            throw new Exception($"Ошибка при синхронизации расписания: {errorText}");
+        }
+
+        return await response.Content.ReadFromJsonAsync<ExternalScheduleImportResultViewModel>();
+    }
 
 }

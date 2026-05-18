@@ -456,6 +456,60 @@ namespace MOLServiceWebClient
 
             return await response.Content.ReadFromJsonAsync<ClassroomsInventoryReportViewModel>();
         }
+        public async Task<PagedResultViewModel<MaterialTechnicalValueViewModel>?> GetMaterialTechnicalValuesPagedAsync(
+    MaterialTechnicalValueSearchModel model)
+        {
+            model ??= new MaterialTechnicalValueSearchModel();
+
+            var parameters = new List<string>
+    {
+        $"page={model.Page}",
+        $"pageSize={model.PageSize}"
+    };
+
+            if (model.SourceType.HasValue)
+            {
+                parameters.Add($"sourceType={(int)model.SourceType.Value}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(model.SearchText))
+            {
+                parameters.Add($"searchText={Uri.EscapeDataString(model.SearchText.Trim())}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(model.InventoryNumber))
+            {
+                parameters.Add($"inventoryNumber={Uri.EscapeDataString(model.InventoryNumber.Trim())}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(model.FullName))
+            {
+                parameters.Add($"fullName={Uri.EscapeDataString(model.FullName.Trim())}");
+            }
+
+            if (model.ClassroomId.HasValue)
+            {
+                parameters.Add($"classroomId={model.ClassroomId.Value}");
+            }
+
+            var url = "api/MaterialTechnicalValue/GetPagedList";
+
+            if (parameters.Any())
+            {
+                url += "?" + string.Join("&", parameters);
+            }
+
+            var response = await _httpClient.GetAsync(url);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Ошибка при получении МТЦ с пагинацией: {error}");
+            }
+
+            return await response.Content
+                .ReadFromJsonAsync<PagedResultViewModel<MaterialTechnicalValueViewModel>>();
+        }
     }
 
 }

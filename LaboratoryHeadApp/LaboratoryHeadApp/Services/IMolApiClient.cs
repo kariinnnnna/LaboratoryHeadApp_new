@@ -1,4 +1,5 @@
 ﻿using MolServiceContracts.BindingModels;
+using MolServiceContracts.SearchModels;
 using MolServiceContracts.ViewModels;
 using MolServiceContracts.ViewModels.Reports;
 
@@ -53,5 +54,6 @@ namespace MOLServiceWebClient
         Task<SoftwareAssignToClassroomResultViewModel?> AssignSoftwareToClassroomAsync(SoftwareAssignToClassroomBindingModel model);
         Task<FullInventoryReportViewModel?> GetFullInventoryReportAsync();
         Task<ClassroomsInventoryReportViewModel?> GetClassroomsInventoryReportAsync(ClassroomsInventoryReportBindingModel model);
+        Task<PagedResultViewModel<MaterialTechnicalValueViewModel>?> GetMaterialTechnicalValuesPagedAsync(MaterialTechnicalValueSearchModel model);
     }
 }

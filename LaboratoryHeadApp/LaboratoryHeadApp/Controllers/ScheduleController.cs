@@ -227,21 +227,60 @@ namespace LaboratoryHeadApp.Controllers
         {
             try
             {
-                var folderPath = _configuration["ApiSettings:ScheduleImportFolderPath"];
+                var classrooms = await _molApiClient.GetClassroomsAsync()
+                                 ?? new List<ClassroomViewModel>();
 
-                if (string.IsNullOrWhiteSpace(folderPath))
+                var classroomNumbers = classrooms
+                    .Where(x => !string.IsNullOrWhiteSpace(x.Number))
+                    .Select(x => x.Number!.Trim())
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(x => x)
+                    .ToList();
+
+                if (!classroomNumbers.Any())
                 {
-                    TempData["ErrorMessage"] = "Не указан путь к папке для синхронизации расписания.";
+                    TempData["ErrorMessage"] =
+                        "Не найдены аудитории для синхронизации расписания. " +
+                        "Проверьте, что MolService запущен и возвращает список аудиторий.";
+
                     return RedirectToAction(returnAction ?? nameof(LessonsGroups), new { date });
                 }
 
-                await _scheduleApiClient.ImportGroupSchedulesFromFolderAsync(
-                    new UniversityScheduleImportFolderBindingModel
+                var result = await _scheduleApiClient.ImportExternalScheduleAsync(
+                    new ExternalScheduleImportBindingModel
                     {
-                        FolderPath = folderPath
+                        ClassroomNumbers = classroomNumbers,
+                        BaseDate = date ?? DateTime.Today
                     });
 
-                TempData["SuccessMessage"] = "Синхронизация расписания завершена.";
+                if (result == null)
+                {
+                    TempData["ErrorMessage"] = "Синхронизация завершилась без результата.";
+                    return RedirectToAction(returnAction ?? nameof(LessonsGroups), new { date });
+                }
+                if (result.SkippedByVersion)
+                {
+                    TempData["SuccessMessage"] =
+                        $"Синхронизация не выполнялась: расписание не изменилось. ";
+
+                    return RedirectToAction(returnAction ?? nameof(LessonsGroups), new { date });
+                }
+
+                TempData["SuccessMessage"] =
+                    $"Синхронизация завершена. " +
+                    $"Передано аудиторий: {classroomNumbers.Count}. " +
+                    $"Обработано групп: {result.ProcessedGroupsCount} из {result.TotalGroupsCount}. " +
+                    $"Получено занятий: {result.ReceivedLessonsCount}. " +
+                    $"Найдено занятий в аудиториях кафедры: {result.FilteredByClassroomCount}. " +
+                    $"Добавлено: {result.CreatedCount}. " +
+                    $"Пропущено: {result.SkippedCount}.";
+
+                if (result.ErrorCount > 0)
+                {
+                    TempData["ErrorMessage"] =
+                        $"Во время синхронизации возникли ошибки: {result.ErrorCount}. " +
+                        $"Первые ошибки: {string.Join("; ", result.Errors.Take(3))}";
+                }
             }
             catch (Exception ex)
             {

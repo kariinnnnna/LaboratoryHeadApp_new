@@ -1,15 +1,26 @@
 ﻿@model MolServiceContracts.BindingModels.MaterialTechnicalValueBindingModel
 @using Microsoft.AspNetCore.Mvc.Rendering
+@using MolServiceDataModels.Enums
 
 @{
     ViewData["Title"] = "Редактирование МТЦ";
     Layout = "_Layout";
+
+    var isMaterialStock = Model.SourceType == MaterialTechnicalValueSourceType.MaterialStock;
+    var codeLabel = isMaterialStock ? "Код номенклатуры" : "Инвентарный номер";
+    var sectionName = isMaterialStock ? "Материальные запасы" : "Основные средства";
+
+    var locationValue = string.IsNullOrWhiteSpace(Model.Location)
+        ? "Кафедра ИС"
+        : Model.Location;
 }
 
 <style>
     :root {
         --galaxy: #0B1F5C;
         --planetary: #334EAC;
+        --line: rgba(11, 31, 92, .15);
+        --soft: #f6f8ff;
     }
 
     .btn-galaxy {
@@ -35,24 +46,63 @@
             background-color: var(--galaxy);
             color: #fff;
         }
+
+    .source-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.35rem 0.75rem;
+        border-radius: 999px;
+        background: var(--soft);
+        color: var(--galaxy);
+        border: 1px solid var(--line);
+        font-size: .9rem;
+        font-weight: 600;
+    }
+
+    .form-hint {
+        color: #6c757d;
+        font-size: .92rem;
+        margin-top: 4px;
+    }
 </style>
 
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">Редактирование МТЦ</h2>
-        <a asp-action="Index" class="btn btn-outline-galaxy">Назад</a>
+        <div>
+            <h2 class="mb-1">Редактирование МТЦ</h2>
+            <span class="source-badge">@sectionName</span>
+        </div>
+
+        <a asp-action="Index"
+           asp-route-sourceType="@Model.SourceType"
+           class="btn btn-outline-galaxy">
+            Назад
+        </a>
     </div>
 
     <div class="card shadow-sm">
         <div class="card-body">
             <form asp-action="Edit" method="post">
+                @Html.AntiForgeryToken()
+
                 <input asp-for="Id" type="hidden" />
+                <input asp-for="SourceType" type="hidden" />
+                <input asp-for="ExternalKey" type="hidden" />
+                <input asp-for="Location" type="hidden" value="@locationValue" />
+
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
                 <div class="mb-3">
-                    <label asp-for="InventoryNumber" class="form-label"></label>
+                    <label asp-for="InventoryNumber" class="form-label">@codeLabel</label>
                     <input asp-for="InventoryNumber" class="form-control" />
                     <span asp-validation-for="InventoryNumber" class="text-danger"></span>
+
+                    @if (isMaterialStock)
+                    {
+                        <div class="form-hint">
+                            Для материальных запасов используется код номенклатуры из 1С.
+                        </div>
+                    }
                 </div>
 
                 <div class="mb-3">
@@ -72,12 +122,6 @@
                     <textarea asp-for="Description" class="form-control" rows="3"></textarea>
                     <span asp-validation-for="Description" class="text-danger"></span>
                 </div>
-
-@*                <div class="mb-3">
-                    <label asp-for="Location" class="form-label"></label>
-                    <input asp-for="Location" class="form-control" />
-                    <span asp-validation-for="Location" class="text-danger"></span>
-                </div>*@
 
                 <div class="mb-3">
                     <label asp-for="MaterialResponsiblePersonId" class="form-label"></label>
@@ -99,7 +143,17 @@
                     <span asp-validation-for="ClassroomId" class="text-danger"></span>
                 </div>
 
-                <button type="submit" class="btn btn-galaxy">Сохранить</button>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-galaxy">
+                        Сохранить
+                    </button>
+
+                    <a asp-action="Index"
+                       asp-route-sourceType="@Model.SourceType"
+                       class="btn btn-outline-secondary">
+                        Отмена
+                    </a>
+                </div>
             </form>
         </div>
     </div>

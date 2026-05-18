@@ -130,11 +130,10 @@ namespace LaboratoryHeadApp.Controllers
         }
 
         private async Task<IActionResult> SaveReservation(
-            ClassroomReservationCreateViewModel model,
-            bool isEdit)
+    ClassroomReservationCreateViewModel model,
+    bool isEdit)
         {
             await FillDictionaries(model);
-            ApplySelectedDictionaryValues(model);
 
             model.ClassroomNumber = string.IsNullOrWhiteSpace(model.ClassroomNumber)
                 ? null
@@ -147,6 +146,72 @@ namespace LaboratoryHeadApp.Controllers
             model.GroupName = string.IsNullOrWhiteSpace(model.GroupName)
                 ? null
                 : model.GroupName.Trim();
+
+            // Аудитория
+            if (model.SelectedClassroomId.HasValue)
+            {
+                var selectedClassroom = model.Classrooms
+                    .FirstOrDefault(x => x.Value == model.SelectedClassroomId.Value.ToString());
+
+                if (selectedClassroom != null)
+                {
+                    model.ClassroomId = model.SelectedClassroomId;
+                    model.ClassroomNumber = selectedClassroom.Text;
+                }
+            }
+            else
+            {
+                model.ClassroomId = null;
+
+                if (string.IsNullOrWhiteSpace(model.ClassroomNumber))
+                {
+                    model.ClassroomNumber = null;
+                }
+            }
+
+            // Преподаватель
+            if (model.SelectedTeacherId.HasValue)
+            {
+                var selectedTeacher = model.Teachers
+                    .FirstOrDefault(x => x.Value == model.SelectedTeacherId.Value.ToString());
+
+                if (selectedTeacher != null)
+                {
+                    model.TeacherId = model.SelectedTeacherId;
+                    model.TeacherName = selectedTeacher.Text;
+                }
+            }
+            else
+            {
+                model.TeacherId = null;
+
+                if (string.IsNullOrWhiteSpace(model.TeacherName))
+                {
+                    model.TeacherName = null;
+                }
+            }
+
+            // Группа
+            if (model.SelectedGroupId.HasValue)
+            {
+                var selectedGroup = model.Groups
+                    .FirstOrDefault(x => x.Value == model.SelectedGroupId.Value.ToString());
+
+                if (selectedGroup != null)
+                {
+                    model.GroupId = model.SelectedGroupId;
+                    model.GroupName = selectedGroup.Text;
+                }
+            }
+            else
+            {
+                model.GroupId = null;
+
+                if (string.IsNullOrWhiteSpace(model.GroupName))
+                {
+                    model.GroupName = null;
+                }
+            }
 
             if (string.IsNullOrWhiteSpace(model.ClassroomNumber))
             {

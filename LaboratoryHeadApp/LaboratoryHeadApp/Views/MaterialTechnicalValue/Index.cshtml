@@ -1,4 +1,5 @@
 ﻿@model List<MolServiceContracts.ViewModels.MaterialTechnicalValueViewModel>
+@using MolServiceDataModels.Enums
 
 @{
     ViewData["Title"] = "Материально-технические ценности";
@@ -6,7 +7,21 @@
 
     var currentPage = ViewBag.CurrentPage as int? ?? 1;
     var totalPages = ViewBag.TotalPages as int? ?? 1;
-    var pageSize = ViewBag.PageSize as int? ?? 10;
+    var pageSize = ViewBag.PageSize as int? ?? 20;
+    var totalCount = ViewBag.TotalCount as int? ?? 0;
+
+    var sourceType = ViewBag.SourceType == null
+        ? MaterialTechnicalValueSourceType.FixedAsset
+        : (MaterialTechnicalValueSourceType)ViewBag.SourceType;
+
+    var searchText = ViewBag.SearchText as string ?? string.Empty;
+
+    var isFixedAsset = sourceType == MaterialTechnicalValueSourceType.FixedAsset;
+    var isMaterialStock = sourceType == MaterialTechnicalValueSourceType.MaterialStock;
+
+    var pageTitle = isFixedAsset
+        ? "Основные средства"
+        : "Материальные запасы";
 }
 
 <style>
@@ -15,6 +30,7 @@
         --planetary: #334EAC;
         --danger-soft: #dc3545;
         --line: rgba(11, 31, 92, .15);
+        --soft: #f6f8ff;
     }
 
     .btn-galaxy {
@@ -128,11 +144,59 @@
     .modal-footer {
         border-top: 1px solid var(--line);
     }
+
+    .tabs-wrap {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .tab-galaxy {
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--galaxy);
+        border-radius: 999px;
+        padding: 8px 16px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: .15s;
+    }
+
+        .tab-galaxy:hover {
+            background: var(--soft);
+            color: var(--galaxy);
+        }
+
+        .tab-galaxy.active {
+            background: var(--galaxy);
+            border-color: var(--galaxy);
+            color: #fff;
+        }
+
+    .filter-panel {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: #fff;
+        padding: 14px;
+        margin-bottom: 16px;
+    }
+
+    .summary-text {
+        color: #6c757d;
+        font-size: .95rem;
+    }
 </style>
 
 <div class="container py-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-        <h2 class="mb-0">Материально-технические ценности</h2>
+        <div>
+            <h2 class="mb-1">Материально-технические ценности</h2>
+            <div class="summary-text">
+                Раздел: @pageTitle. Всего записей: @totalCount
+            </div>
+        </div>
+
         <div class="d-flex gap-2">
             <a asp-controller="MOL" asp-action="Index" class="btn btn-outline-galaxy">
                 Назад
@@ -145,7 +209,10 @@
                 Синхронизировать с 1С
             </button>
 
-            <a asp-controller="MaterialTechnicalValue" asp-action="Create" class="btn btn-galaxy">
+            <a asp-controller="MaterialTechnicalValue"
+               asp-action="Create"
+               asp-route-sourceType="@sourceType"
+               class="btn btn-galaxy">
                 Добавить МТЦ
             </a>
         </div>
@@ -165,6 +232,69 @@
         </div>
     }
 
+    <div class="tabs-wrap">
+        <a asp-action="Index"
+           asp-route-sourceType="@MaterialTechnicalValueSourceType.FixedAsset"
+           asp-route-page="1"
+           asp-route-pageSize="@pageSize"
+           asp-route-searchText="@searchText"
+           class="tab-galaxy @(isFixedAsset ? "active" : "")">
+            Основные средства
+        </a>
+
+        <a asp-action="Index"
+           asp-route-sourceType="@MaterialTechnicalValueSourceType.MaterialStock"
+           asp-route-page="1"
+           asp-route-pageSize="@pageSize"
+           asp-route-searchText="@searchText"
+           class="tab-galaxy @(isMaterialStock ? "active" : "")">
+            Материальные запасы
+        </a>
+    </div>
+
+    <div class="filter-panel shadow-sm">
+        <form method="get" asp-action="Index">
+            <input type="hidden" name="sourceType" value="@sourceType" />
+            <input type="hidden" name="page" value="1" />
+
+            <div class="row g-2 align-items-end">
+                <div class="col-md-6">
+                    <label for="searchText" class="form-label">Поиск</label>
+                    <input type="text"
+                           id="searchText"
+                           name="searchText"
+                           value="@searchText"
+                           class="form-control"
+                           placeholder="Код, наименование, МОЛ, аудитория..." />
+                </div>
+
+                <div class="col-md-2">
+                    <label for="pageSize" class="form-label">Показывать по</label>
+                    <select id="pageSize" name="pageSize" class="form-select">
+                        <option value="10" selected="@(pageSize == 10)">10</option>
+                        <option value="20" selected="@(pageSize == 20)">20</option>
+                        <option value="50" selected="@(pageSize == 50)">50</option>
+                        <option value="100" selected="@(pageSize == 100)">100</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-galaxy">
+                        Найти
+                    </button>
+
+                    <a asp-action="Index"
+                       asp-route-sourceType="@sourceType"
+                       asp-route-page="1"
+                       asp-route-pageSize="@pageSize"
+                       class="btn btn-outline-secondary">
+                        Сбросить
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
     <div class="card shadow-sm">
         <div class="card-body">
             @if (Model == null || Model.Count == 0)
@@ -175,22 +305,11 @@
             }
             else
             {
-                @*<form method="get" asp-action="Index" class="page-size-form">
-            <label for="pageSize" class="form-label mb-0">Показывать по:</label>
-            <select id="pageSize" name="pageSize" class="form-select" onchange="this.form.submit()">
-            <option value="5" selected="@(pageSize == 5)">5</option>
-            <option value="10" selected="@(pageSize == 10)">10</option>
-            <option value="20" selected="@(pageSize == 20)">20</option>
-            <option value="50" selected="@(pageSize == 50)">50</option>
-            </select>
-            <input type="hidden" name="page" value="1" />
-            </form>*@
-
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover align-middle mb-0">
                         <thead>
                             <tr>
-                                <th>Код</th>
+                                <th>@(isMaterialStock ? "Код номенклатуры" : "Инвентарный номер")</th>
                                 <th>Наименование</th>
                                 <th>Количество</th>
                                 <th>Аудитория</th>
@@ -224,7 +343,9 @@
                                         }
                                         else
                                         {
-                                            @(string.IsNullOrWhiteSpace(item.ClassroomNumber) ? "Не закреплено" : item.ClassroomNumber)
+                                            @(string.IsNullOrWhiteSpace(item.ClassroomNumber)
+                                                ? "Не закреплено"
+                                                : item.ClassroomNumber)
                                         }
                                     </td>
                                     <td>@item.MaterialResponsiblePersonName</td>
@@ -253,25 +374,74 @@
 
                 @if (totalPages > 1)
                 {
+                    var startPage = Math.Max(1, currentPage - 3);
+                    var endPage = Math.Min(totalPages, currentPage + 3);
+
                     <nav class="mt-4">
                         <ul class="pagination justify-content-center mb-0">
                             <li class="page-item @(currentPage == 1 ? "disabled" : "")">
                                 <a class="page-link"
                            asp-action="Index"
+                           asp-route-sourceType="@sourceType"
                            asp-route-page="@(currentPage - 1)"
-                           asp-route-pageSize="@pageSize">
+                           asp-route-pageSize="@pageSize"
+                           asp-route-searchText="@searchText">
                                     Назад
                                 </a>
                             </li>
 
-                            @for (int i = 1; i <= totalPages; i++)
+                            @if (startPage > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link"
+                           asp-action="Index"
+                           asp-route-sourceType="@sourceType"
+                           asp-route-page="1"
+                           asp-route-pageSize="@pageSize"
+                           asp-route-searchText="@searchText">
+                                        1
+                                    </a>
+                                </li>
+
+                                @if (startPage > 2)
+                                {
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                }
+                            }
+
+                            @for (int i = startPage; i <= endPage; i++)
                             {
                                 <li class="page-item @(i == currentPage ? "active" : "")">
                                     <a class="page-link"
                            asp-action="Index"
+                           asp-route-sourceType="@sourceType"
                            asp-route-page="@i"
-                           asp-route-pageSize="@pageSize">
+                           asp-route-pageSize="@pageSize"
+                           asp-route-searchText="@searchText">
                                         @i
+                                    </a>
+                                </li>
+                            }
+
+                            @if (endPage < totalPages)
+                            {
+                                @if (endPage < totalPages - 1)
+                                {
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                }
+
+                                <li class="page-item">
+                                    <a class="page-link"
+                           asp-action="Index"
+                           asp-route-sourceType="@sourceType"
+                           asp-route-page="@totalPages"
+                           asp-route-pageSize="@pageSize"
+                           asp-route-searchText="@searchText">
+                                        @totalPages
                                     </a>
                                 </li>
                             }
@@ -279,8 +449,10 @@
                             <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
                                 <a class="page-link"
                            asp-action="Index"
+                           asp-route-sourceType="@sourceType"
                            asp-route-page="@(currentPage + 1)"
-                           asp-route-pageSize="@pageSize">
+                           asp-route-pageSize="@pageSize"
+                           asp-route-searchText="@searchText">
                                     Вперед
                                 </a>
                             </li>

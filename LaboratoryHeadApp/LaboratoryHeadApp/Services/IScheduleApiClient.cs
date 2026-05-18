@@ -42,6 +42,7 @@ public interface IScheduleApiClient
     Task<ScheduleItemViewModel?> GetScheduleItemAsync(int id);
     Task<ScheduleItemViewModel?> UpdateScheduleItemAsync(ScheduleItemBindingModel model);
     Task<bool> DeleteScheduleItemAsync(int id);
+    Task<ExternalScheduleImportResultViewModel?> ImportExternalScheduleAsync(ExternalScheduleImportBindingModel model);
 
 
 }
