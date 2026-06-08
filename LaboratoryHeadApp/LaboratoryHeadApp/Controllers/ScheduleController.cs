@@ -44,13 +44,7 @@ namespace LaboratoryHeadApp.Controllers
             var groups = await _scheduleApiClient.GetGroupsAsync()
                 ?? new List<GroupViewModel>();
 
-            var classroomNumbers = classrooms
-                .Where(x => !string.IsNullOrWhiteSpace(x.Number))
-                .Select(x => x.Number!.Trim())
-                .Where(IsTargetClassroom)
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(x => x)
-                .ToList();
+            var classroomNumbers = GetScheduleClassroomNumbers(classrooms);
 
             var teacherNames = teachers
                 .Where(x => !string.IsNullOrWhiteSpace(x.TeacherName))
@@ -69,7 +63,9 @@ namespace LaboratoryHeadApp.Controllers
             var dayItems = scheduleItems
                 .Where(x => x.Date.Date == selectedDate)
                 .Where(x => !string.IsNullOrWhiteSpace(x.ClassroomNumber))
-                .Where(x => classroomNumbers.Contains(x.ClassroomNumber!.Trim(), StringComparer.OrdinalIgnoreCase))
+                .Where(x => classroomNumbers.Contains(
+                    x.ClassroomNumber!.Trim(),
+                    StringComparer.OrdinalIgnoreCase))
                 .ToList();
 
             var model = new LessonsRoomsPageViewModel
@@ -79,21 +75,21 @@ namespace LaboratoryHeadApp.Controllers
                 Teachers = teacherNames,
                 Groups = groupNames,
                 Lessons = dayItems
-                .Select(x => new LessonsRoomsItemViewModel
-                {
-                    Id = x.Id,
-                    ClassroomNumber = x.ClassroomNumber ?? string.Empty,
-                    PairNumber = x.PairNumber,
-                    TypeName = x.TypeName,
-                    Subject = x.Subject,
-                    TeacherName = x.TeacherName ?? string.Empty,
-                    GroupName = x.GroupName ?? string.Empty,
-                    Subgroup = x.Comment ?? string.Empty,
-                    IsImported = x.IsImported
-                })
-                .OrderBy(x => x.ClassroomNumber)
-                .ThenBy(x => x.PairNumber)
-                .ToList()
+                    .Select(x => new LessonsRoomsItemViewModel
+                    {
+                        Id = x.Id,
+                        ClassroomNumber = x.ClassroomNumber ?? string.Empty,
+                        PairNumber = x.PairNumber,
+                        TypeName = x.TypeName,
+                        Subject = x.Subject,
+                        TeacherName = x.TeacherName ?? string.Empty,
+                        GroupName = x.GroupName ?? string.Empty,
+                        Subgroup = x.Comment ?? string.Empty,
+                        IsImported = x.IsImported
+                    })
+                    .OrderBy(x => x.ClassroomNumber)
+                    .ThenBy(x => x.PairNumber)
+                    .ToList()
             };
 
             return View(model);
@@ -115,6 +111,8 @@ namespace LaboratoryHeadApp.Controllers
             var classrooms = await _molApiClient.GetClassroomsAsync()
                 ?? new List<ClassroomViewModel>();
 
+            var classroomNumbers = GetScheduleClassroomNumbers(classrooms);
+
             var dayItems = items
                 .Where(x => x.Date.Date == selectedDate)
                 .ToList();
@@ -122,24 +120,23 @@ namespace LaboratoryHeadApp.Controllers
             var model = new LessonsGroupsPageViewModel
             {
                 SelectedDate = selectedDate.ToString("yyyy-MM-dd"),
+
                 Groups = groups
                     .Where(x => !string.IsNullOrWhiteSpace(x.GroupName))
                     .Select(x => x.GroupName!.Trim())
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .OrderBy(x => x)
                     .ToList(),
+
                 Teachers = teachers
                     .Where(x => !string.IsNullOrWhiteSpace(x.TeacherName))
                     .Select(x => x.TeacherName!.Trim())
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .OrderBy(x => x)
                     .ToList(),
-                Classrooms = classrooms
-                    .Where(x => !string.IsNullOrWhiteSpace(x.Number))
-                    .Select(x => x.Number!.Trim())
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .OrderBy(x => x)
-                    .ToList(),
+
+                Classrooms = classroomNumbers,
+
                 Lessons = dayItems
                     .Select(x => new LessonsGroupsItemViewModel
                     {
@@ -178,6 +175,8 @@ namespace LaboratoryHeadApp.Controllers
             var classrooms = await _molApiClient.GetClassroomsAsync()
                 ?? new List<ClassroomViewModel>();
 
+            var classroomNumbers = GetScheduleClassroomNumbers(classrooms);
+
             var dayItems = items
                 .Where(x => x.Date.Date == selectedDate)
                 .ToList();
@@ -185,24 +184,23 @@ namespace LaboratoryHeadApp.Controllers
             var model = new LessonsTeachersPageViewModel
             {
                 SelectedDate = selectedDate.ToString("yyyy-MM-dd"),
+
                 Teachers = teachers
                     .Where(x => !string.IsNullOrWhiteSpace(x.TeacherName))
                     .Select(x => x.TeacherName!.Trim())
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .OrderBy(x => x)
                     .ToList(),
+
                 Groups = groups
                     .Where(x => !string.IsNullOrWhiteSpace(x.GroupName))
                     .Select(x => x.GroupName!.Trim())
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .OrderBy(x => x)
                     .ToList(),
-                Classrooms = classrooms
-                    .Where(x => !string.IsNullOrWhiteSpace(x.Number))
-                    .Select(x => x.Number!.Trim())
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .OrderBy(x => x)
-                    .ToList(),
+
+                Classrooms = classroomNumbers,
+
                 Lessons = dayItems
                     .Select(x => new LessonsTeachersItemViewModel
                     {
@@ -228,20 +226,16 @@ namespace LaboratoryHeadApp.Controllers
             try
             {
                 var classrooms = await _molApiClient.GetClassroomsAsync()
-                                 ?? new List<ClassroomViewModel>();
+                    ?? new List<ClassroomViewModel>();
 
-                var classroomNumbers = classrooms
-                    .Where(x => !string.IsNullOrWhiteSpace(x.Number))
-                    .Select(x => x.Number!.Trim())
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .OrderBy(x => x)
-                    .ToList();
+                var classroomNumbers = GetScheduleClassroomNumbers(classrooms);
 
                 if (!classroomNumbers.Any())
                 {
                     TempData["ErrorMessage"] =
                         "Не найдены аудитории для синхронизации расписания. " +
-                        "Проверьте, что MolService запущен и возвращает список аудиторий.";
+                        "Проверьте, что аудитории синхронизированы из Core System, " +
+                        "имеют заполненный номер и не помечены как 'Не использовать в расписании'.";
 
                     return RedirectToAction(returnAction ?? nameof(LessonsGroups), new { date });
                 }
@@ -258,10 +252,11 @@ namespace LaboratoryHeadApp.Controllers
                     TempData["ErrorMessage"] = "Синхронизация завершилась без результата.";
                     return RedirectToAction(returnAction ?? nameof(LessonsGroups), new { date });
                 }
+
                 if (result.SkippedByVersion)
                 {
                     TempData["SuccessMessage"] =
-                        $"Синхронизация не выполнялась: расписание не изменилось. ";
+                        "Синхронизация не выполнялась: расписание не изменилось.";
 
                     return RedirectToAction(returnAction ?? nameof(LessonsGroups), new { date });
                 }
@@ -290,14 +285,17 @@ namespace LaboratoryHeadApp.Controllers
             return RedirectToAction(returnAction ?? nameof(LessonsGroups), new { date });
         }
 
-        private static bool IsTargetClassroom(string classroom)
+        private static List<string> GetScheduleClassroomNumbers(
+            IEnumerable<ClassroomViewModel> classrooms)
         {
-            var value = classroom.Trim().Replace('–', '-');
-
-            return System.Text.RegularExpressions.Regex.IsMatch(
-                value,
-                @"^(3[-_]4.+)$",
-                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            return classrooms
+                .Where(x => x.CoreSystemId > 0)
+                .Where(x => !x.NotUseInSchedule)
+                .Where(x => !string.IsNullOrWhiteSpace(x.Number))
+                .Select(x => x.Number!.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(x => x)
+                .ToList();
         }
 
         public IActionResult Duty() => View();

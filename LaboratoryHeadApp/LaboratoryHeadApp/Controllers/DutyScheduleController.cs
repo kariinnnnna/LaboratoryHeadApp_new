@@ -1,6 +1,5 @@
 ﻿using LaboratoryHeadApp.Helpers;
 using LaboratoryHeadApp.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using ScheduleServiceContracts.BindingModels;
@@ -19,8 +18,11 @@ namespace LaboratoryHeadApp.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var schedules = await _scheduleApiClient.GetDutyScheduleAsync() ?? new List<DutyScheduleViewModel>();
-            var lessonTimes = (await _scheduleApiClient.GetLessonTimesAsync() ?? new List<LessonTimeViewModel>())
+            var schedules = await _scheduleApiClient.GetDutyScheduleAsync()
+                ?? new List<DutyScheduleViewModel>();
+
+            var lessonTimes = (await _scheduleApiClient.GetLessonTimesAsync()
+                    ?? new List<LessonTimeViewModel>())
                 .OrderBy(x => x.PairNumber)
                 .ToList();
 
@@ -28,8 +30,13 @@ namespace LaboratoryHeadApp.Controllers
             var currentWeekMonday = GetMonday(today);
             var nextWeekMonday = currentWeekMonday.AddDays(7);
 
-            var currentWeekDates = Enumerable.Range(0, 7).Select(i => currentWeekMonday.AddDays(i)).ToList();
-            var nextWeekDates = Enumerable.Range(0, 7).Select(i => nextWeekMonday.AddDays(i)).ToList();
+            var currentWeekDates = Enumerable.Range(0, 7)
+                .Select(i => currentWeekMonday.AddDays(i))
+                .ToList();
+
+            var nextWeekDates = Enumerable.Range(0, 7)
+                .Select(i => nextWeekMonday.AddDays(i))
+                .ToList();
 
             var model = new DutyScheduleIndexViewModel
             {
@@ -46,18 +53,19 @@ namespace LaboratoryHeadApp.Controllers
         [HttpGet]
         public async Task<IActionResult> Create()
         {
-            var lessonTimes = (await _scheduleApiClient.GetLessonTimesAsync() ?? new List<LessonTimeViewModel>())
+            var lessonTimes = (await _scheduleApiClient.GetLessonTimesAsync()
+                    ?? new List<LessonTimeViewModel>())
                 .OrderBy(x => x.PairNumber)
                 .ToList();
 
-            var dutyPersons = (await _scheduleApiClient.GetDutyPersonsAsync() ?? new List<DutyPersonViewModel>())
+            var dutyPersons = (await _scheduleApiClient.GetDutyPersonsAsync()
+                    ?? new List<DutyPersonViewModel>())
                 .OrderBy(x => x.LastName)
                 .ThenBy(x => x.FirstName)
                 .ToList();
 
             var today = DateTime.Today;
             var currentWeekMonday = GetMonday(today);
-            var nextWeekMonday = currentWeekMonday.AddDays(7);
 
             var dates = Enumerable.Range(0, 14)
                 .Select(i => currentWeekMonday.AddDays(i))
@@ -85,13 +93,7 @@ namespace LaboratoryHeadApp.Controllers
                 Cells = cells,
                 LessonTimes = lessonTimes,
                 DutyPersons = dutyPersons,
-                DutyPersonItems = dutyPersons
-                    .Select(x => new SelectListItem
-                    {
-                        Value = x.Id.ToString(),
-                        Text = $"{DutyPersonNameHelper.GetInitials(x.FullName)} ({x.FullName})"
-                    })
-                    .ToList()
+                DutyPersonItems = BuildDutyPersonItems(dutyPersons)
             };
 
             return View(model);
@@ -100,32 +102,18 @@ namespace LaboratoryHeadApp.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(DutyScheduleCreateViewModel model)
         {
-            var lessonTimes = (await _scheduleApiClient.GetLessonTimesAsync() ?? new List<LessonTimeViewModel>())
-                .OrderBy(x => x.PairNumber)
-                .ToList();
+            await FillDutyScheduleModel(model);
 
-            var dutyPersons = (await _scheduleApiClient.GetDutyPersonsAsync() ?? new List<DutyPersonViewModel>())
-                .OrderBy(x => x.LastName)
-                .ThenBy(x => x.FirstName)
-                .ToList();
-
-            model.LessonTimes = lessonTimes;
-            model.DutyPersons = dutyPersons;
-            model.DutyPersonItems = dutyPersons
-                .Select(x => new SelectListItem
-                {
-                    Value = x.Id.ToString(),
-                    Text = $"{DutyPersonNameHelper.GetInitials(x.FullName)} ({x.FullName})"
-                })
-                .ToList();
-
-            foreach (var cell in model.Cells)
+            foreach (var cell in model.Cells ?? new List<DutyScheduleCellEditViewModel>())
             {
                 if (cell.DutyPerson1Id.HasValue &&
                     cell.DutyPerson2Id.HasValue &&
+                    cell.DutyPerson1Id.Value > 0 &&
+                    cell.DutyPerson2Id.Value > 0 &&
                     cell.DutyPerson1Id.Value == cell.DutyPerson2Id.Value)
                 {
-                    ModelState.AddModelError(string.Empty,
+                    ModelState.AddModelError(
+                        string.Empty,
                         $"Нельзя выбрать одного и того же дежурного дважды: {cell.Date:dd.MM.yyyy}, пара {cell.PairNumber}");
                 }
             }
@@ -137,7 +125,7 @@ namespace LaboratoryHeadApp.Controllers
 
             try
             {
-                foreach (var cell in model.Cells)
+                foreach (var cell in model.Cells ?? new List<DutyScheduleCellEditViewModel>())
                 {
                     if (cell.LessonTimeId <= 0)
                     {
@@ -174,57 +162,22 @@ namespace LaboratoryHeadApp.Controllers
             }
         }
 
-        private static DateTime GetMonday(DateTime date)
-        {
-            var diff = (7 + (date.DayOfWeek - DayOfWeek.Monday)) % 7;
-            return date.AddDays(-1 * diff).Date;
-        }
-
-        private static Dictionary<string, List<string>> BuildWeekData(
-            List<DateTime> weekDates,
-            List<LessonTimeViewModel> lessonTimes,
-            List<DutyScheduleViewModel> schedules)
-        {
-            var result = new Dictionary<string, List<string>>();
-
-            foreach (var date in weekDates)
-            {
-                foreach (var lessonTime in lessonTimes)
-                {
-                    var key = GetCellKey(date, lessonTime.Id);
-
-                    var initials = schedules
-                        .Where(x => x.Date.Date == date.Date && x.LessonTimeId == lessonTime.Id)
-                        .Select(x => DutyPersonNameHelper.GetInitials(x.DutyPersonName))
-                        .Where(x => !string.IsNullOrWhiteSpace(x))
-                        .Distinct()
-                        .ToList();
-
-                    result[key] = initials;
-                }
-            }
-
-            return result;
-        }
-
-        public static string GetCellKey(DateTime date, int lessonTimeId)
-        {
-            return $"{date:yyyy-MM-dd}_{lessonTimeId}";
-        }
-
         [HttpGet]
         public async Task<IActionResult> Edit()
         {
-            var lessonTimes = (await _scheduleApiClient.GetLessonTimesAsync() ?? new List<LessonTimeViewModel>())
+            var lessonTimes = (await _scheduleApiClient.GetLessonTimesAsync()
+                    ?? new List<LessonTimeViewModel>())
                 .OrderBy(x => x.PairNumber)
                 .ToList();
 
-            var dutyPersons = (await _scheduleApiClient.GetDutyPersonsAsync() ?? new List<DutyPersonViewModel>())
+            var dutyPersons = (await _scheduleApiClient.GetDutyPersonsAsync()
+                    ?? new List<DutyPersonViewModel>())
                 .OrderBy(x => x.LastName)
                 .ThenBy(x => x.FirstName)
                 .ToList();
 
-            var schedules = await _scheduleApiClient.GetDutyScheduleAsync() ?? new List<DutyScheduleViewModel>();
+            var schedules = await _scheduleApiClient.GetDutyScheduleAsync()
+                ?? new List<DutyScheduleViewModel>();
 
             var today = DateTime.Today;
             var currentWeekMonday = GetMonday(today);
@@ -240,7 +193,9 @@ namespace LaboratoryHeadApp.Controllers
                 foreach (var lessonTime in lessonTimes)
                 {
                     var sameCellSchedules = schedules
-                        .Where(x => x.Date.Date == date.Date && x.LessonTimeId == lessonTime.Id)
+                        .Where(x => x.Date.Date == date.Date &&
+                                    x.LessonTimeId == lessonTime.Id)
+                        .OrderBy(x => x.Id)
                         .Take(2)
                         .ToList();
 
@@ -262,46 +217,27 @@ namespace LaboratoryHeadApp.Controllers
                 Cells = cells,
                 LessonTimes = lessonTimes,
                 DutyPersons = dutyPersons,
-                DutyPersonItems = dutyPersons
-                    .Select(x => new SelectListItem
-                    {
-                        Value = x.Id.ToString(),
-                        Text = $"{DutyPersonNameHelper.GetInitials(x.FullName)} ({x.FullName})"
-                    })
-                    .ToList()
+                DutyPersonItems = BuildDutyPersonItems(dutyPersons)
             };
 
             return View(model);
         }
+
         [HttpPost]
         public async Task<IActionResult> Edit(DutyScheduleCreateViewModel model)
         {
-            var lessonTimes = (await _scheduleApiClient.GetLessonTimesAsync() ?? new List<LessonTimeViewModel>())
-                .OrderBy(x => x.PairNumber)
-                .ToList();
+            await FillDutyScheduleModel(model);
 
-            var dutyPersons = (await _scheduleApiClient.GetDutyPersonsAsync() ?? new List<DutyPersonViewModel>())
-                .OrderBy(x => x.LastName)
-                .ThenBy(x => x.FirstName)
-                .ToList();
-
-            model.LessonTimes = lessonTimes;
-            model.DutyPersons = dutyPersons;
-            model.DutyPersonItems = dutyPersons
-                .Select(x => new SelectListItem
-                {
-                    Value = x.Id.ToString(),
-                    Text = $"{DutyPersonNameHelper.GetInitials(x.FullName)} ({x.FullName})"
-                })
-                .ToList();
-
-            foreach (var cell in model.Cells)
+            foreach (var cell in model.Cells ?? new List<DutyScheduleCellEditViewModel>())
             {
                 if (cell.DutyPerson1Id.HasValue &&
                     cell.DutyPerson2Id.HasValue &&
+                    cell.DutyPerson1Id.Value > 0 &&
+                    cell.DutyPerson2Id.Value > 0 &&
                     cell.DutyPerson1Id.Value == cell.DutyPerson2Id.Value)
                 {
-                    ModelState.AddModelError(string.Empty,
+                    ModelState.AddModelError(
+                        string.Empty,
                         $"Нельзя выбрать одного и того же дежурного дважды: {cell.Date:dd.MM.yyyy}, пара {cell.PairNumber}");
                 }
             }
@@ -313,70 +249,37 @@ namespace LaboratoryHeadApp.Controllers
 
             try
             {
-                // Обновление существующих записей
-                foreach (var cell in model.Cells)
+                var allSchedules = await _scheduleApiClient.GetDutyScheduleAsync()
+                    ?? new List<DutyScheduleViewModel>();
+
+                foreach (var cell in model.Cells ?? new List<DutyScheduleCellEditViewModel>())
                 {
                     if (cell.LessonTimeId <= 0)
                     {
                         continue;
                     }
 
-                    var existingSchedule = (await _scheduleApiClient.GetDutyScheduleAsync() ?? new List<DutyScheduleViewModel>())
-                        .FirstOrDefault(x => x.Date.Date == cell.Date.Date && x.LessonTimeId == cell.LessonTimeId);
+                    var existingSchedules = allSchedules
+                        .Where(x => x.Date.Date == cell.Date.Date &&
+                                    x.LessonTimeId == cell.LessonTimeId)
+                        .OrderBy(x => x.Id)
+                        .ToList();
 
-                    if (existingSchedule != null)
+                    await UpsertOrDeleteDutyScheduleAsync(
+                        existingSchedules.ElementAtOrDefault(0),
+                        cell.DutyPerson1Id,
+                        cell.Date,
+                        cell.LessonTimeId);
+
+                    await UpsertOrDeleteDutyScheduleAsync(
+                        existingSchedules.ElementAtOrDefault(1),
+                        cell.DutyPerson2Id,
+                        cell.Date,
+                        cell.LessonTimeId);
+
+                    foreach (var extraSchedule in existingSchedules.Skip(2))
                     {
-                        // Если запись уже есть, обновляем её
-                        var updatedSchedule = new DutyScheduleBindingModel
-                        {
-                            Id = existingSchedule.Id,
-                            Date = cell.Date,
-                            LessonTimeId = cell.LessonTimeId,
-                            DutyPersonId = cell.DutyPerson1Id ?? existingSchedule.DutyPersonId
-                        };
-
-                        await _scheduleApiClient.UpdateDutyScheduleAsync(updatedSchedule);
-
-                        // Обновляем второго дежурного, если есть
-                        if (cell.DutyPerson2Id.HasValue)
-                        {
-                            var updatedSecondSchedule = new DutyScheduleBindingModel
-                            {
-                                Id = existingSchedule.Id,
-                                Date = cell.Date,
-                                LessonTimeId = cell.LessonTimeId,
-                                DutyPersonId = cell.DutyPerson2Id.Value
-                            };
-
-                            await _scheduleApiClient.UpdateDutyScheduleAsync(updatedSecondSchedule);
-                        }
-                    }
-                    else
-                    {
-                        // Если записи нет, создаём новые записи
-                        if (cell.DutyPerson1Id.HasValue)
-                        {
-                            var newSchedule = new DutyScheduleBindingModel
-                            {
-                                Date = cell.Date,
-                                LessonTimeId = cell.LessonTimeId,
-                                DutyPersonId = cell.DutyPerson1Id.Value
-                            };
-
-                            await _scheduleApiClient.CreateDutyScheduleAsync(newSchedule);
-                        }
-
-                        if (cell.DutyPerson2Id.HasValue)
-                        {
-                            var secondSchedule = new DutyScheduleBindingModel
-                            {
-                                Date = cell.Date,
-                                LessonTimeId = cell.LessonTimeId,
-                                DutyPersonId = cell.DutyPerson2Id.Value
-                            };
-
-                            await _scheduleApiClient.CreateDutyScheduleAsync(secondSchedule);
-                        }
+                        await _scheduleApiClient.DeleteDutyScheduleAsync(extraSchedule.Id);
                     }
                 }
 
@@ -387,6 +290,110 @@ namespace LaboratoryHeadApp.Controllers
                 ModelState.AddModelError(string.Empty, ex.ToString());
                 return View(model);
             }
+        }
+
+        private async Task FillDutyScheduleModel(DutyScheduleCreateViewModel model)
+        {
+            var lessonTimes = (await _scheduleApiClient.GetLessonTimesAsync()
+                    ?? new List<LessonTimeViewModel>())
+                .OrderBy(x => x.PairNumber)
+                .ToList();
+
+            var dutyPersons = (await _scheduleApiClient.GetDutyPersonsAsync()
+                    ?? new List<DutyPersonViewModel>())
+                .OrderBy(x => x.LastName)
+                .ThenBy(x => x.FirstName)
+                .ToList();
+
+            model.LessonTimes = lessonTimes;
+            model.DutyPersons = dutyPersons;
+            model.DutyPersonItems = BuildDutyPersonItems(dutyPersons);
+        }
+
+        private static List<SelectListItem> BuildDutyPersonItems(
+            IEnumerable<DutyPersonViewModel> dutyPersons)
+        {
+            return dutyPersons
+                .Select(x => new SelectListItem
+                {
+                    Value = x.Id.ToString(),
+                    Text = $"{DutyPersonNameHelper.GetInitials(x.FullName)} ({x.FullName})"
+                })
+                .ToList();
+        }
+
+        private async Task UpsertOrDeleteDutyScheduleAsync(
+            DutyScheduleViewModel? existingSchedule,
+            int? dutyPersonId,
+            DateTime date,
+            int lessonTimeId)
+        {
+            if (dutyPersonId.HasValue && dutyPersonId.Value > 0)
+            {
+                var bindingModel = new DutyScheduleBindingModel
+                {
+                    Id = existingSchedule?.Id ?? 0,
+                    Date = date,
+                    LessonTimeId = lessonTimeId,
+                    DutyPersonId = dutyPersonId.Value
+                };
+
+                if (existingSchedule == null)
+                {
+                    await _scheduleApiClient.CreateDutyScheduleAsync(bindingModel);
+                }
+                else
+                {
+                    await _scheduleApiClient.UpdateDutyScheduleAsync(bindingModel);
+                }
+
+                return;
+            }
+
+            if (existingSchedule != null)
+            {
+                await _scheduleApiClient.DeleteDutyScheduleAsync(existingSchedule.Id);
+            }
+        }
+
+        private static DateTime GetMonday(DateTime date)
+        {
+            var diff = (7 + (date.DayOfWeek - DayOfWeek.Monday)) % 7;
+            return date.AddDays(-1 * diff).Date;
+        }
+
+        private static Dictionary<string, List<string>> BuildWeekData(
+            List<DateTime> weekDates,
+            List<LessonTimeViewModel> lessonTimes,
+            List<DutyScheduleViewModel> schedules)
+        {
+            var result = new Dictionary<string, List<string>>();
+
+            foreach (var date in weekDates)
+            {
+                foreach (var lessonTime in lessonTimes)
+                {
+                    var key = GetCellKey(date, lessonTime.Id);
+
+                    var initials = schedules
+                        .Where(x => x.Date.Date == date.Date &&
+                                    x.LessonTimeId == lessonTime.Id)
+                        .OrderBy(x => x.Id)
+                        .Select(x => DutyPersonNameHelper.GetInitials(x.DutyPersonName))
+                        .Where(x => !string.IsNullOrWhiteSpace(x))
+                        .Distinct()
+                        .ToList();
+
+                    result[key] = initials;
+                }
+            }
+
+            return result;
+        }
+
+        public static string GetCellKey(DateTime date, int lessonTimeId)
+        {
+            return $"{date:yyyy-MM-dd}_{lessonTimeId}";
         }
     }
 }
