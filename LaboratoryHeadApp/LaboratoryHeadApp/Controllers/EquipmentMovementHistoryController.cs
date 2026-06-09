@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using MolServiceContracts.BindingModels;
 using MolServiceContracts.ViewModels;
 using MOLServiceWebClient;
@@ -16,16 +15,61 @@ namespace LaboratoryHeadApp.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(
+            string? searchText,
+            int page = 1,
+            int pageSize = 20)
         {
-            var items = await _client.GetEquipmentMovementHistoriesAsync();
-            return View(items ?? new List<EquipmentMovementHistoryViewModel>());
+            var items = await _client.GetEquipmentMovementHistoriesAsync()
+                ?? new List<EquipmentMovementHistoryViewModel>();
+
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                var search = searchText.Trim().ToLowerInvariant();
+
+                items = items
+                    .Where(x =>
+                        x.MaterialTechnicalValueId.ToString().Contains(search) ||
+                        (x.MaterialTechnicalValueName ?? string.Empty).ToLowerInvariant().Contains(search) ||
+                        x.Quantity.ToString().Contains(search) ||
+                        (x.Reason ?? string.Empty).ToLowerInvariant().Contains(search) ||
+                        (x.Comment ?? string.Empty).ToLowerInvariant().Contains(search) ||
+                        x.MoveDate.ToString("dd.MM.yyyy HH:mm").Contains(search) ||
+                        x.MoveDate.ToString("dd.MM.yyyy").Contains(search))
+                    .ToList();
+            }
+
+            page = page < 1 ? 1 : page;
+            pageSize = pageSize <= 0 ? 20 : pageSize;
+
+            var totalCount = items.Count;
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+            if (totalPages > 0 && page > totalPages)
+            {
+                page = totalPages;
+            }
+
+            var pagedItems = items
+                .OrderByDescending(x => x.MoveDate)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            ViewBag.SearchText = searchText ?? string.Empty;
+            ViewBag.Page = page;
+            ViewBag.PageSize = pageSize;
+            ViewBag.TotalCount = totalCount;
+            ViewBag.TotalPages = totalPages;
+
+            return View(pagedItems);
         }
 
         [HttpGet]
         public async Task<IActionResult> Create(int materialTechnicalValueId)
         {
             var equipment = await _client.GetMaterialTechnicalValueAsync(materialTechnicalValueId);
+
             if (equipment == null)
             {
                 return NotFound();
@@ -49,6 +93,7 @@ namespace LaboratoryHeadApp.Controllers
         public async Task<IActionResult> Create(EquipmentMovementHistoryBindingModel model)
         {
             var equipment = await _client.GetMaterialTechnicalValueAsync(model.MaterialTechnicalValueId);
+
             if (equipment == null)
             {
                 return NotFound();
@@ -79,6 +124,7 @@ namespace LaboratoryHeadApp.Controllers
             try
             {
                 var result = await _client.CreateEquipmentMovementHistoryAsync(model);
+
                 if (!result)
                 {
                     ModelState.AddModelError(string.Empty, "Не удалось выполнить списание оборудования");

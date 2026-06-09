@@ -3,6 +3,9 @@
 @{
     ViewData["Title"] = "Карточка оборудования";
     Layout = "_Layout";
+
+    var canEditManually = ViewBag.CanEditManually as bool?
+        ?? string.IsNullOrWhiteSpace(Model.ExternalKey);
 }
 
 <style>
@@ -125,6 +128,17 @@
         color: #6c757d;
         font-size: 0.95rem;
     }
+
+    .source-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.45rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        background-color: #6c757d;
+        color: #fff;
+    }
 </style>
 
 <div class="container py-4">
@@ -134,16 +148,47 @@
             <div class="text-muted">@Model.FullName</div>
         </div>
 
-        <div class="d-flex gap-2">
-            <a asp-action="Index" class="btn btn-outline-galaxy">Назад</a>
-            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-galaxy">Редактировать</a>
+        <div class="d-flex gap-2 align-items-center">
+            <a asp-action="Index" class="btn btn-outline-galaxy">
+                Назад
+            </a>
+
+            @if (canEditManually)
+            {
+                <a asp-action="Edit"
+               asp-route-id="@Model.Id"
+               class="btn btn-galaxy">
+                    Редактировать
+                </a>
+            }
+            else
+            {
+                <span class="source-badge">
+                    Из 1С
+                </span>
+            }
         </div>
     </div>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
 
     <div class="info-card mb-4">
         <div class="info-header">
             <h5 class="mb-0">Основная информация</h5>
         </div>
+
         <div class="info-body">
             <div class="info-grid">
                 <div class="info-item">
@@ -156,6 +201,20 @@
                         else
                         {
                             <span class="status-badge status-active">Активно</span>
+                        }
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">Источник</div>
+                    <div class="info-value">
+                        @if (string.IsNullOrWhiteSpace(Model.ExternalKey))
+                        {
+                            <span>Создано вручную</span>
+                        }
+                        else
+                        {
+                            <span>Синхронизировано из 1С</span>
                         }
                     </div>
                 </div>
@@ -184,7 +243,9 @@
                         }
                         else
                         {
-                            @(string.IsNullOrWhiteSpace(Model.ClassroomNumber) ? "Не закреплено" : Model.ClassroomNumber)
+                            @(string.IsNullOrWhiteSpace(Model.ClassroomNumber)
+                                ? "Не закреплено"
+                                : Model.ClassroomNumber)
                         }
                     </div>
                 </div>
@@ -228,15 +289,23 @@
                         }
                         else
                         {
-                            <strong>@(string.IsNullOrWhiteSpace(Model.ClassroomNumber) ? "не закреплено" : $"аудитория {Model.ClassroomNumber}")</strong>
+                            <strong>
+                                @(string.IsNullOrWhiteSpace(Model.ClassroomNumber)
+                                    ? "не закреплено"
+                                    : $"аудитория {Model.ClassroomNumber}")
+                            </strong>
                         }
                     </div>
                 </div>
 
                 @if (Model.Quantity > 0)
                 {
-                    <a asp-action="AssignClassroom" asp-route-id="@Model.Id" class="btn btn-outline-galaxy">
-                        @(string.IsNullOrWhiteSpace(Model.ClassroomNumber) ? "Привязать аудиторию" : "Изменить аудиторию")
+                    <a asp-action="AssignClassroom"
+                   asp-route-id="@Model.Id"
+                   class="btn btn-outline-galaxy">
+                        @(string.IsNullOrWhiteSpace(Model.ClassroomNumber)
+                            ? "Привязать аудиторию"
+                            : "Изменить аудиторию")
                     </a>
                 }
                 else

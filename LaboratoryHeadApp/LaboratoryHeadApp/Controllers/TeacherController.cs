@@ -1,7 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using ScheduleServiceContracts.BindingModels;
-using ScheduleServiceContracts.SearchModels;
 using ScheduleServiceContracts.ViewModels;
 
 namespace LaboratoryHeadApp.Controllers
@@ -16,17 +14,63 @@ namespace LaboratoryHeadApp.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(
+            string? searchText,
+            int page = 1,
+            int pageSize = 20)
         {
             try
             {
-                var teachers = await _scheduleApiClient.GetTeachersAsync();
-                return View(teachers ?? new List<ScheduleServiceContracts.ViewModels.TeacherViewModel>());
+                var teachers = await _scheduleApiClient.GetTeachersAsync()
+                    ?? new List<TeacherViewModel>();
+
+                if (!string.IsNullOrWhiteSpace(searchText))
+                {
+                    var search = searchText.Trim().ToLowerInvariant();
+
+                    teachers = teachers
+                        .Where(x =>
+                            x.CoreSystemId.ToString().Contains(search) ||
+                            (x.TeacherName ?? string.Empty).ToLowerInvariant().Contains(search))
+                        .ToList();
+                }
+
+                page = page < 1 ? 1 : page;
+                pageSize = pageSize <= 0 ? 20 : pageSize;
+
+                var totalCount = teachers.Count;
+                var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+                if (totalPages > 0 && page > totalPages)
+                {
+                    page = totalPages;
+                }
+
+                var pagedTeachers = teachers
+                    .OrderBy(x => x.TeacherName)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+
+                ViewBag.SearchText = searchText ?? string.Empty;
+                ViewBag.Page = page;
+                ViewBag.PageSize = pageSize;
+                ViewBag.TotalCount = totalCount;
+                ViewBag.TotalPages = totalPages;
+
+                return View(pagedTeachers);
             }
             catch (Exception ex)
             {
                 TempData["ErrorMessage"] = $"Ошибка при получении списка преподавателей: {ex.Message}";
-                return View(new List<ScheduleServiceContracts.ViewModels.TeacherViewModel>());
+
+                ViewBag.SearchText = searchText ?? string.Empty;
+                ViewBag.Page = 1;
+                ViewBag.PageSize = pageSize;
+                ViewBag.TotalCount = 0;
+                ViewBag.TotalPages = 0;
+
+                return View(new List<TeacherViewModel>());
             }
         }
 
@@ -36,6 +80,7 @@ namespace LaboratoryHeadApp.Controllers
             try
             {
                 var teacher = await _scheduleApiClient.GetTeacherAsync(id);
+
                 if (teacher == null)
                 {
                     TempData["ErrorMessage"] = "Преподаватель не найден";
@@ -70,6 +115,7 @@ namespace LaboratoryHeadApp.Controllers
             try
             {
                 var result = await _scheduleApiClient.UpdateTeacherAsync(model);
+
                 if (!result)
                 {
                     TempData["ErrorMessage"] = "Не удалось обновить преподавателя";
@@ -93,6 +139,7 @@ namespace LaboratoryHeadApp.Controllers
             try
             {
                 var result = await _scheduleApiClient.DeleteTeacherAsync(id);
+
                 TempData["SuccessMessage"] = result
                     ? "Преподаватель успешно удалён"
                     : "Не удалось удалить преподавателя";
@@ -112,6 +159,7 @@ namespace LaboratoryHeadApp.Controllers
             try
             {
                 var result = await _scheduleApiClient.ImportTeachersFromCoreAsync();
+
                 TempData["SuccessMessage"] = result
                     ? "Синхронизация преподавателей успешно выполнена"
                     : "Не удалось выполнить синхронизацию преподавателей";

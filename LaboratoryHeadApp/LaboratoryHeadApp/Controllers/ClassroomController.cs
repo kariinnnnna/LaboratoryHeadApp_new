@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using MolServiceContracts.BindingModels;
+using MolServiceContracts.ViewModels;
 using MOLServiceWebClient;
 
 namespace LaboratoryHeadApp.Controllers
@@ -15,10 +15,53 @@ namespace LaboratoryHeadApp.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(
+            string? searchText,
+            int page = 1,
+            int pageSize = 20)
         {
-            var result = await _client.GetClassroomsAsync();
-            return View(result ?? new List<MolServiceContracts.ViewModels.ClassroomViewModel>());
+            var result = await _client.GetClassroomsAsync()
+                ?? new List<ClassroomViewModel>();
+
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                var search = searchText.Trim().ToLowerInvariant();
+
+                result = result
+                    .Where(x =>
+                        x.CoreSystemId.ToString().Contains(search) ||
+                        (x.Number ?? string.Empty).ToLowerInvariant().Contains(search) ||
+                        (x.TypeName ?? string.Empty).ToLowerInvariant().Contains(search) ||
+                        x.Capacity.ToString().Contains(search) ||
+                        (x.NotUseInSchedule ? "да" : "нет").Contains(search) ||
+                        (x.HasProjector ? "да" : "нет").Contains(search))
+                    .ToList();
+            }
+
+            page = page < 1 ? 1 : page;
+            pageSize = pageSize <= 0 ? 20 : pageSize;
+
+            var totalCount = result.Count;
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+            if (totalPages > 0 && page > totalPages)
+            {
+                page = totalPages;
+            }
+
+            var pagedResult = result
+                .OrderBy(x => x.Number)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            ViewBag.SearchText = searchText ?? string.Empty;
+            ViewBag.Page = page;
+            ViewBag.PageSize = pageSize;
+            ViewBag.TotalCount = totalCount;
+            ViewBag.TotalPages = totalPages;
+
+            return View(pagedResult);
         }
 
         [HttpGet]
@@ -36,6 +79,7 @@ namespace LaboratoryHeadApp.Controllers
             }
 
             var result = await _client.CreateClassroomAsync(model);
+
             if (!result)
             {
                 ModelState.AddModelError(string.Empty, "Не удалось создать аудиторию");
@@ -49,6 +93,7 @@ namespace LaboratoryHeadApp.Controllers
         public async Task<IActionResult> Edit(int id)
         {
             var element = await _client.GetClassroomAsync(id);
+
             if (element == null)
             {
                 return NotFound();
@@ -77,6 +122,7 @@ namespace LaboratoryHeadApp.Controllers
             }
 
             var result = await _client.UpdateClassroomAsync(model);
+
             if (!result)
             {
                 ModelState.AddModelError(string.Empty, "Не удалось обновить аудиторию");
@@ -92,6 +138,7 @@ namespace LaboratoryHeadApp.Controllers
             try
             {
                 var result = await _client.DeleteClassroomAsync(id);
+
                 if (!result)
                 {
                     TempData["ErrorMessage"] = "Не удалось удалить аудиторию";
@@ -111,9 +158,10 @@ namespace LaboratoryHeadApp.Controllers
             try
             {
                 var result = await _client.ImportClassroomsFromCoreAsync();
+
                 if (result)
                 {
-                    TempData["SuccessMessage"] = "Синхронизация аудиторий из core успешно выполнена.";
+                    TempData["SuccessMessage"] = "Синхронизация аудиторий из Core System успешно выполнена.";
                 }
                 else
                 {

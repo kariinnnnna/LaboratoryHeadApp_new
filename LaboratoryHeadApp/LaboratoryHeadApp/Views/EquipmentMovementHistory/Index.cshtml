@@ -3,6 +3,15 @@
 @{
     ViewData["Title"] = "История списаний";
     Layout = "_Layout";
+
+    var searchText = Convert.ToString(ViewBag.SearchText) ?? string.Empty;
+    var currentPage = (int)(ViewBag.Page ?? 1);
+    var pageSize = (int)(ViewBag.PageSize ?? 20);
+    var totalCount = (int)(ViewBag.TotalCount ?? 0);
+    var totalPages = (int)(ViewBag.TotalPages ?? 0);
+
+    var startPage = Math.Max(1, currentPage - 2);
+    var endPage = Math.Min(totalPages, currentPage + 2);
 }
 
 <style>
@@ -105,13 +114,39 @@
         font-weight: 600;
         font-size: .9rem;
     }
+
+    .search-card {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: #ffffff;
+        box-shadow: 0 8px 22px rgba(11, 31, 92, .06);
+    }
+
+    .text-muted-small {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+
+    .page-item.active .page-link {
+        background-color: var(--galaxy);
+        border-color: var(--galaxy);
+    }
+
+    .page-link {
+        color: var(--galaxy);
+    }
 </style>
 
 <div class="container py-4">
     <div class="page-title">
         <div>
             <h2 class="mb-1">История списаний оборудования</h2>
-            <div class="text-muted">Журнал всех операций списания</div>
+            <div class="text-muted">
+                Журнал всех операций списания
+            </div>
+            <div class="text-muted-small">
+                Всего записей: @totalCount
+            </div>
         </div>
 
         <div class="d-flex gap-2">
@@ -121,12 +156,54 @@
         </div>
     </div>
 
+    <form method="get" class="card search-card mb-3">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-7">
+                    <label class="form-label">Поиск</label>
+                    <input type="text"
+                           name="searchText"
+                           value="@searchText"
+                           class="form-control"
+                           placeholder="Оборудование, дата, причина, комментарий..." />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Показывать по</label>
+                    <select name="pageSize" class="form-select">
+                        <option value="10" selected="@(pageSize == 10 ? "selected" : null)">10</option>
+                        <option value="20" selected="@(pageSize == 20 ? "selected" : null)">20</option>
+                        <option value="50" selected="@(pageSize == 50 ? "selected" : null)">50</option>
+                        <option value="100" selected="@(pageSize == 100 ? "selected" : null)">100</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-galaxy">
+                        Найти
+                    </button>
+
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        Сбросить
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+
     <div class="table-card">
-        <div class="table-card-header">
-            <strong>Всего записей: @Model.Count</strong>
+        <div class="table-card-header d-flex justify-content-between align-items-center">
+            <strong>Записи списания</strong>
+
+            @if (totalPages > 0)
+            {
+                <span class="text-muted-small">
+                    Страница @currentPage из @totalPages, показано: @(Model?.Count ?? 0)
+                </span>
+            }
         </div>
 
-        @if (Model.Any())
+        @if (Model != null && Model.Any())
         {
             <div class="table-wrap">
                 <table class="table table-hover align-middle">
@@ -140,24 +217,32 @@
                             <th class="text-end">Действия</th>
                         </tr>
                     </thead>
+
                     <tbody>
                         @foreach (var item in Model)
                         {
                             <tr>
                                 <td>@item.MoveDate.ToString("dd.MM.yyyy HH:mm")</td>
+
                                 <td>
                                     <div class="fw-semibold">@item.MaterialTechnicalValueName</div>
-                                    <div class="text-muted small">ID оборудования: @item.MaterialTechnicalValueId</div>
+                                    <div class="text-muted small">
+                                        ID оборудования: @item.MaterialTechnicalValueId
+                                    </div>
                                 </td>
+
                                 <td>
                                     <span class="badge-soft">@item.Quantity</span>
                                 </td>
+
                                 <td class="reason-cell">
                                     @(string.IsNullOrWhiteSpace(item.Reason) ? "Не указано" : item.Reason)
                                 </td>
+
                                 <td class="comment-cell">
                                     @(string.IsNullOrWhiteSpace(item.Comment) ? "—" : item.Comment)
                                 </td>
+
                                 <td class="text-end">
                                     <a asp-controller="MaterialTechnicalValue"
                                asp-action="Details"
@@ -171,12 +256,101 @@
                     </tbody>
                 </table>
             </div>
+
+            @if (totalPages > 1)
+            {
+                <nav class="p-3">
+                    <ul class="pagination justify-content-center mb-0">
+                        <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
+                            <a class="page-link"
+                       asp-action="Index"
+                       asp-route-page="@(currentPage - 1)"
+                       asp-route-pageSize="@pageSize"
+                       asp-route-searchText="@searchText">
+                                Назад
+                            </a>
+                        </li>
+
+                        @if (startPage > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link"
+                       asp-action="Index"
+                       asp-route-page="1"
+                       asp-route-pageSize="@pageSize"
+                       asp-route-searchText="@searchText">
+                                    1
+                                </a>
+                            </li>
+
+                            @if (startPage > 2)
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            }
+                        }
+
+                        @for (var i = startPage; i <= endPage; i++)
+                        {
+                            <li class="page-item @(currentPage == i ? "active" : "")">
+                                <a class="page-link"
+                       asp-action="Index"
+                       asp-route-page="@i"
+                       asp-route-pageSize="@pageSize"
+                       asp-route-searchText="@searchText">
+                                    @i
+                                </a>
+                            </li>
+                        }
+
+                        @if (endPage < totalPages)
+                        {
+                            @if (endPage < totalPages - 1)
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            }
+
+                            <li class="page-item">
+                                <a class="page-link"
+                       asp-action="Index"
+                       asp-route-page="@totalPages"
+                       asp-route-pageSize="@pageSize"
+                       asp-route-searchText="@searchText">
+                                    @totalPages
+                                </a>
+                            </li>
+                        }
+
+                        <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
+                            <a class="page-link"
+                       asp-action="Index"
+                       asp-route-page="@(currentPage + 1)"
+                       asp-route-pageSize="@pageSize"
+                       asp-route-searchText="@searchText">
+                                Вперёд
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            }
         }
         else
         {
-            <div class="empty-state">
-                Пока нет ни одной записи о списании оборудования.
-            </div>
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                <div class="empty-state">
+                    По запросу «@searchText» ничего не найдено.
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">
+                    Пока нет ни одной записи о списании оборудования.
+                </div>
+            }
         }
     </div>
 </div>

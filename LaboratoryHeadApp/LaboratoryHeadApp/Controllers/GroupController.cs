@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using ScheduleServiceContracts.BindingModels;
+using ScheduleServiceContracts.ViewModels;
 
 namespace LaboratoryHeadApp.Controllers
 {
@@ -14,17 +14,63 @@ namespace LaboratoryHeadApp.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(
+            string? searchText,
+            int page = 1,
+            int pageSize = 20)
         {
             try
             {
-                var groups = await _scheduleApiClient.GetGroupsAsync();
-                return View(groups ?? new List<ScheduleServiceContracts.ViewModels.GroupViewModel>());
+                var groups = await _scheduleApiClient.GetGroupsAsync()
+                    ?? new List<GroupViewModel>();
+
+                if (!string.IsNullOrWhiteSpace(searchText))
+                {
+                    var search = searchText.Trim().ToLowerInvariant();
+
+                    groups = groups
+                        .Where(x =>
+                            x.CoreSystemId.ToString().Contains(search) ||
+                            (x.GroupName ?? string.Empty).ToLowerInvariant().Contains(search))
+                        .ToList();
+                }
+
+                page = page < 1 ? 1 : page;
+                pageSize = pageSize <= 0 ? 20 : pageSize;
+
+                var totalCount = groups.Count;
+                var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+                if (totalPages > 0 && page > totalPages)
+                {
+                    page = totalPages;
+                }
+
+                var pagedGroups = groups
+                    .OrderBy(x => x.GroupName)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+
+                ViewBag.SearchText = searchText ?? string.Empty;
+                ViewBag.Page = page;
+                ViewBag.PageSize = pageSize;
+                ViewBag.TotalCount = totalCount;
+                ViewBag.TotalPages = totalPages;
+
+                return View(pagedGroups);
             }
             catch (Exception ex)
             {
                 TempData["ErrorMessage"] = $"Ошибка при получении списка групп: {ex.Message}";
-                return View(new List<ScheduleServiceContracts.ViewModels.GroupViewModel>());
+
+                ViewBag.SearchText = searchText ?? string.Empty;
+                ViewBag.Page = 1;
+                ViewBag.PageSize = pageSize;
+                ViewBag.TotalCount = 0;
+                ViewBag.TotalPages = 0;
+
+                return View(new List<GroupViewModel>());
             }
         }
 
@@ -34,6 +80,7 @@ namespace LaboratoryHeadApp.Controllers
             try
             {
                 var group = await _scheduleApiClient.GetGroupAsync(id);
+
                 if (group == null)
                 {
                     TempData["ErrorMessage"] = "Группа не найдена";
@@ -68,6 +115,7 @@ namespace LaboratoryHeadApp.Controllers
             try
             {
                 var result = await _scheduleApiClient.UpdateGroupAsync(model);
+
                 if (!result)
                 {
                     TempData["ErrorMessage"] = "Не удалось обновить группу";
@@ -91,6 +139,7 @@ namespace LaboratoryHeadApp.Controllers
             try
             {
                 var result = await _scheduleApiClient.DeleteGroupAsync(id);
+
                 TempData["SuccessMessage"] = result
                     ? "Группа успешно удалена"
                     : "Не удалось удалить группу";
@@ -110,6 +159,7 @@ namespace LaboratoryHeadApp.Controllers
             try
             {
                 var result = await _scheduleApiClient.ImportGroupsFromCoreAsync();
+
                 TempData["SuccessMessage"] = result
                     ? "Синхронизация групп успешно выполнена"
                     : "Не удалось выполнить синхронизацию групп";

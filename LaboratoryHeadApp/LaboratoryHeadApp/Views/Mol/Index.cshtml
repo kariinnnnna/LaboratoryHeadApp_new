@@ -8,6 +8,8 @@
         --galaxy: #0B1F5C;
         --planetary: #334EAC;
         --sky: #D0E3FF;
+        --line: rgba(11, 31, 92, .15);
+        --soft: #f6f8ff;
     }
 
     .btn-galaxy {
@@ -33,21 +35,79 @@
             background-color: var(--galaxy);
             color: #fff;
         }
+
+    .sync-panel {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: linear-gradient(180deg, #fff, var(--soft));
+        padding: 18px;
+        margin-bottom: 24px;
+        box-shadow: 0 8px 22px rgba(11, 31, 92, .06);
+    }
+
+    .sync-title {
+        font-weight: 700;
+        color: var(--galaxy);
+        margin-bottom: 4px;
+    }
+
+    .sync-text {
+        color: #6c757d;
+        font-size: .95rem;
+    }
+
+    .module-card {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+    }
 </style>
 
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">Модуль материально ответственных лиц и оборудования</h2>
+
         <a asp-controller="Home" asp-action="Index"
            class="btn btn-outline-galaxy">
             На главную
         </a>
     </div>
 
+    <div class="sync-panel">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <div class="sync-title">Быстрое обновление данных</div>
+                <div class="sync-text">
+                    Запустите синхронизацию справочника аудиторий из Core System или обновление основных средств и материальных запасов из 1С.
+                </div>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2">
+                <form asp-controller="Mol"
+                      asp-action="ImportClassroomsFromCore"
+                      method="post"
+                      class="js-submit-once">
+                    @Html.AntiForgeryToken()
+
+                    <button type="submit"
+                            class="btn btn-outline-galaxy"
+                            data-loading-text="Синхронизация...">
+                        Синхронизировать аудитории
+                    </button>
+                </form>
+
+                <button type="button"
+                        class="btn btn-galaxy"
+                        data-bs-toggle="modal"
+                        data-bs-target="#importInventoryModal">
+                    Синхронизировать с 1С
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div class="row g-4">
-        <!-- МОЛ -->
         <div class="col-md-4">
-            <div class="card h-100 shadow-sm">
+            <div class="card module-card h-100 shadow-sm">
                 <div class="card-body d-flex flex-column">
                     <h5 class="card-title">Материально ответственные лица</h5>
                     <p class="card-text">
@@ -68,9 +128,8 @@
             </div>
         </div>
 
-        <!-- Аудитории -->
         <div class="col-md-4">
-            <div class="card h-100 shadow-sm">
+            <div class="card module-card h-100 shadow-sm">
                 <div class="card-body d-flex flex-column">
                     <h5 class="card-title">Аудитории</h5>
                     <p class="card-text">
@@ -91,40 +150,38 @@
             </div>
         </div>
 
-        <!-- Оборудование -->
         <div class="col-md-4">
-            <div class="card h-100 shadow-sm">
+            <div class="card module-card h-100 shadow-sm">
                 <div class="card-body d-flex flex-column">
                     <h5 class="card-title">Материально-технические ценности</h5>
                     <p class="card-text">
-                        Учёт оборудования, его инвентарных номеров, стоимости и расположения.
+                        Учёт основных средств, материальных запасов, инвентарных номеров и расположения.
                     </p>
                     <ul class="small mb-3">
-                        <li>Инвентарный номер и название</li>
-                        <li>Описание</li>
-                        <li>Установленное ПО</li>
+                        <li>Основные средства и материальные запасы</li>
+                        <li>Материально ответственное лицо</li>
+                        <li>Закрепление за аудиторией</li>
                     </ul>
                     <div class="mt-auto">
                         <a asp-controller="MaterialTechnicalValue" asp-action="Index"
                            class="btn btn-outline-galaxy">
-                            Список оборудования
+                            Список МТЦ
                         </a>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- ПО -->
         <div class="col-md-4">
-            <div class="card h-100 shadow-sm">
+            <div class="card module-card h-100 shadow-sm">
                 <div class="card-body d-flex flex-column">
                     <h5 class="card-title">Программное обеспечение</h5>
                     <p class="card-text">
-                        Учёт программного обеспечения, его лицензий и версий.
+                        Учёт программного обеспечения, лицензий и привязки к оборудованию.
                     </p>
                     <ul class="small mb-3">
-                        <li>Название, версия, лицензия</li>
-                        <li>Описания и ключи</li>
+                        <li>Название и описание</li>
+                        <li>Лицензионные ключи</li>
                         <li>Связь с оборудованием</li>
                     </ul>
                     <div class="mt-auto">
@@ -137,17 +194,17 @@
             </div>
         </div>
 
-        <!-- История перемещений -->
         <div class="col-md-4">
-            <div class="card h-100 shadow-sm">
+            <div class="card module-card h-100 shadow-sm">
                 <div class="card-body d-flex flex-column">
                     <h5 class="card-title">История списания</h5>
                     <p class="card-text">
-                        Справочник по списанию оборудования.
+                        Журнал операций списания оборудования с указанием количества, даты и причины.
                     </p>
                     <ul class="small mb-3">
-                        <li>Дата перемещения, инвентарный номер</li>
-                        <li>Причины перемещения</li>
+                        <li>Дата списания</li>
+                        <li>Оборудование</li>
+                        <li>Причина и комментарий</li>
                     </ul>
                     <div class="mt-auto">
                         <a asp-controller="EquipmentMovementHistory" asp-action="Index"
@@ -159,16 +216,15 @@
             </div>
         </div>
 
-        <!-- Отчеты -->
         <div class="col-md-4">
-            <div class="card h-100 shadow-sm">
+            <div class="card module-card h-100 shadow-sm">
                 <div class="card-body d-flex flex-column">
                     <h5 class="card-title">Отчёты</h5>
                     <p class="card-text">
                         Формирование инвентаризационных отчётов по оборудованию кафедры.
                     </p>
                     <ul class="small mb-3">
-                        <li>Общий отчёт по оборудованию кафедры ИС</li>
+                        <li>Общий отчёт по оборудованию</li>
                         <li>Отчёт по выбранным аудиториям</li>
                     </ul>
                     <div class="mt-auto">
@@ -179,6 +235,64 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="importInventoryModal" tabindex="-1" aria-labelledby="importInventoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-controller="Mol"
+                  asp-action="ImportInventoryFromOneC"
+                  method="post"
+                  class="js-submit-once">
+                @Html.AntiForgeryToken()
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="importInventoryModalLabel">
+                        Синхронизация с 1С
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="alert alert-light border">
+                        Если используется временная ссылка к 1С без авторизации, логин и пароль можно не заполнять.
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="oneCUsername" class="form-label">Логин</label>
+                        <input type="text"
+                               id="oneCUsername"
+                               name="Username"
+                               class="form-control"
+                               placeholder="Введите логин, если требуется" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="oneCPassword" class="form-label">Пароль</label>
+                        <input type="password"
+                               id="oneCPassword"
+                               name="Password"
+                               class="form-control"
+                               placeholder="Введите пароль, если требуется" />
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-outline-secondary"
+                            data-bs-dismiss="modal">
+                        Отмена
+                    </button>
+
+                    <button type="submit"
+                            class="btn btn-galaxy"
+                            data-loading-text="Синхронизация...">
+                        Запустить синхронизацию
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

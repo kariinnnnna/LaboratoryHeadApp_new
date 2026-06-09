@@ -8,6 +8,8 @@
         --galaxy: #0B1F5C;
         --planetary: #334EAC;
         --sky: #D0E3FF;
+        --line: rgba(11, 31, 92, .15);
+        --soft: #f6f8ff;
     }
 
     .btn-galaxy {
@@ -37,21 +39,85 @@
     .dropdown-menu .dropdown-item:active {
         background-color: var(--planetary);
     }
+
+    .sync-panel {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: linear-gradient(180deg, #fff, var(--soft));
+        padding: 18px;
+        margin-bottom: 24px;
+        box-shadow: 0 8px 22px rgba(11, 31, 92, .06);
+    }
+
+    .sync-title {
+        font-weight: 700;
+        color: var(--galaxy);
+        margin-bottom: 4px;
+    }
+
+    .sync-text {
+        color: #6c757d;
+        font-size: .95rem;
+    }
+
+    .module-card {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+    }
 </style>
 
 <div class="container py-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-        <h2 class="mb-0">Модуль расписания и графиков</h2>
+        <h2 class="mb-0">Модуль расписания и графика дежурств</h2>
+
         <a asp-controller="Home" asp-action="Index" class="btn btn-outline-galaxy">
             На главную
         </a>
     </div>
 
+    <div class="sync-panel">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <div class="sync-title">Быстрое обновление данных</div>
+                <div class="sync-text">
+                    Обновите справочники групп и преподавателей из Core System или загрузите актуальное расписание занятий.
+                </div>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2">
+                <form asp-controller="Schedule"
+                      asp-action="SyncCoreDictionaries"
+                      method="post"
+                      class="js-submit-once">
+                    @Html.AntiForgeryToken()
+
+                    <button type="submit"
+                            class="btn btn-outline-galaxy"
+                            data-loading-text="Синхронизация...">
+                        Синхронизировать справочники
+                    </button>
+                </form>
+
+                <form asp-controller="Schedule"
+                      asp-action="SyncLessonsFromMain"
+                      method="post"
+                      class="js-submit-once">
+                    @Html.AntiForgeryToken()
+
+                    <button type="submit"
+                            class="btn btn-galaxy"
+                            data-loading-text="Загрузка расписания...">
+                        Синхронизировать расписание
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div class="row g-4">
 
-        <!-- Время занятий -->
         <div class="col-md-6">
-            <div class="card h-100 shadow-sm">
+            <div class="card module-card h-100 shadow-sm">
                 <div class="card-body d-flex flex-column">
                     <h5 class="card-title">Время занятий</h5>
                     <p class="card-text">
@@ -60,7 +126,7 @@
                     <ul class="small mb-3">
                         <li>Номер пары</li>
                         <li>Время начала и окончания</li>
-                        <li>Описание (при необходимости)</li>
+                        <li>Описание при необходимости</li>
                     </ul>
                     <div class="mt-auto">
                         <a asp-controller="LessonTime" asp-action="Index"
@@ -72,18 +138,17 @@
             </div>
         </div>
 
-        <!-- Просмотр расписания по разрезам -->
         <div class="col-md-6">
-            <div class="card h-100 shadow-sm">
+            <div class="card module-card h-100 shadow-sm">
                 <div class="card-body d-flex flex-column">
-                    <h5 class="card-title">Просмотр расписания по разделам</h5>
+                    <h5 class="card-title">Расписание занятий</h5>
                     <p class="card-text">
                         Просмотр расписания по аудиториям, преподавателям и учебным группам.
                     </p>
                     <ul class="small mb-3">
-                        <li>Аудитории</li>
-                        <li>Преподаватели</li>
-                        <li>Группы</li>
+                        <li>Расписание по аудиториям</li>
+                        <li>Расписание по преподавателям</li>
+                        <li>Расписание по группам</li>
                     </ul>
 
                     <div class="mt-auto">
@@ -129,39 +194,37 @@
             </div>
         </div>
 
-        <!-- Расписание дежурств -->
         <div class="col-md-6">
-            <div class="card h-100 shadow-sm">
+            <div class="card module-card h-100 shadow-sm">
                 <div class="card-body d-flex flex-column">
-                    <h5 class="card-title">Расписание дежурств</h5>
+                    <h5 class="card-title">График дежурств</h5>
                     <p class="card-text">
-                        Планирование дежурств в лаборатории: ответственные, даты, время и место.
+                        Планирование дежурств в лаборатории: дежурные, даты и учебные пары.
                     </p>
                     <ul class="small mb-3">
-                        <li>Список дежурств по датам</li>
-                        <li>ФИО дежурного</li>
-                        <li>Место и комментарии</li>
+                        <li>Назначение до двух дежурных на пару</li>
+                        <li>Просмотр текущей и следующей недели</li>
+                        <li>Редактирование графика</li>
                     </ul>
                     <div class="mt-auto">
                         <a asp-controller="DutySchedule" asp-action="Index"
                            class="btn btn-galaxy">
-                            Расписание дежурств
+                            График дежурств
                         </a>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Дежурные -->
         <div class="col-md-6">
-            <div class="card h-100 shadow-sm">
+            <div class="card module-card h-100 shadow-sm">
                 <div class="card-body d-flex flex-column">
                     <h5 class="card-title">Дежурные</h5>
                     <p class="card-text">
                         Справочник сотрудников, назначаемых на дежурства в лаборатории.
                     </p>
                     <ul class="small mb-3">
-                        <li>ФИО дежурного</li>
+                        <li>Фамилия и имя дежурного</li>
                         <li>Должность</li>
                         <li>Контактные данные</li>
                     </ul>
@@ -175,18 +238,17 @@
             </div>
         </div>
 
-        <!-- Справочник аудиторий -->
         <div class="col-lg-4 col-md-6">
-            <div class="card h-100 shadow-sm">
+            <div class="card module-card h-100 shadow-sm">
                 <div class="card-body d-flex flex-column">
                     <h5 class="card-title">Аудитории</h5>
                     <p class="card-text">
-                        Справочник аудиторий, используемых в расписании.
+                        Справочник аудиторий, используемых при фильтрации расписания.
                     </p>
                     <ul class="small mb-3">
                         <li>Номер аудитории</li>
                         <li>Вместимость</li>
-                        <li>Тип аудитории</li>
+                        <li>Признак использования в расписании</li>
                     </ul>
                     <div class="mt-auto">
                         <a asp-controller="Classroom" asp-action="Index"
@@ -198,18 +260,17 @@
             </div>
         </div>
 
-        <!-- Справочник преподавателей -->
         <div class="col-lg-4 col-md-6">
-            <div class="card h-100 shadow-sm">
+            <div class="card module-card h-100 shadow-sm">
                 <div class="card-body d-flex flex-column">
                     <h5 class="card-title">Преподаватели</h5>
                     <p class="card-text">
-                        Справочник преподавателей, участвующих в учебном процессе.
+                        Справочник преподавателей, синхронизируемый из Core System.
                     </p>
                     <ul class="small mb-3">
                         <li>ФИО преподавателя</li>
-                        <li>Должность</li>
-                        <li>Учебная нагрузка</li>
+                        <li>Идентификатор Core System</li>
+                        <li>Использование в расписании</li>
                     </ul>
                     <div class="mt-auto">
                         <a asp-controller="Teacher" asp-action="Index"
@@ -221,18 +282,17 @@
             </div>
         </div>
 
-        <!-- Справочник групп -->
         <div class="col-lg-4 col-md-6">
-            <div class="card h-100 shadow-sm">
+            <div class="card module-card h-100 shadow-sm">
                 <div class="card-body d-flex flex-column">
                     <h5 class="card-title">Группы</h5>
                     <p class="card-text">
-                        Справочник учебных групп, используемых в расписании.
+                        Справочник учебных групп, синхронизируемый из Core System.
                     </p>
                     <ul class="small mb-3">
                         <li>Название группы</li>
-                        <li>Курс</li>
-                        <li>Направление подготовки</li>
+                        <li>Идентификатор Core System</li>
+                        <li>Использование в расписании</li>
                     </ul>
                     <div class="mt-auto">
                         <a asp-controller="Group" asp-action="Index"

@@ -93,6 +93,8 @@ namespace LaboratoryHeadApp.Controllers
                 ? null
                 : SoftwareInstallRuleHelper.GetRestrictionReason(element);
 
+            ViewBag.CanEditManually = string.IsNullOrWhiteSpace(element.ExternalKey);
+
             return View(element);
         }
 
@@ -150,6 +152,14 @@ namespace LaboratoryHeadApp.Controllers
                 return NotFound();
             }
 
+            if (!string.IsNullOrWhiteSpace(element.ExternalKey))
+            {
+                TempData["ErrorMessage"] =
+                    "МТЦ синхронизирована из 1С и не может редактироваться вручную.";
+
+                return RedirectToAction(nameof(Details), new { id = element.Id });
+            }
+
             var model = new MaterialTechnicalValueBindingModel
             {
                 Id = element.Id,
@@ -179,12 +189,24 @@ namespace LaboratoryHeadApp.Controllers
                 return NotFound();
             }
 
+            if (!string.IsNullOrWhiteSpace(current.ExternalKey))
+            {
+                TempData["ErrorMessage"] =
+                    "МТЦ синхронизирована из 1С и не может редактироваться вручную.";
+
+                return RedirectToAction(nameof(Details), new { id = current.Id });
+            }
+
             model.SourceType = current.SourceType;
-            model.ExternalKey = current.ExternalKey;
+            model.ExternalKey = current.ExternalKey ?? string.Empty;
 
             model.Location = string.IsNullOrWhiteSpace(model.Location)
                 ? "Кафедра ИС"
                 : model.Location.Trim();
+
+            ModelState.Remove(nameof(model.SourceType));
+            ModelState.Remove(nameof(model.ExternalKey));
+            ModelState.Remove(nameof(model.Location));
 
             if (!ModelState.IsValid)
             {
@@ -212,6 +234,24 @@ namespace LaboratoryHeadApp.Controllers
             int id,
             MaterialTechnicalValueSourceType sourceType = MaterialTechnicalValueSourceType.FixedAsset)
         {
+            var element = await _client.GetMaterialTechnicalValueAsync(id);
+
+            if (element == null)
+            {
+                return NotFound();
+            }
+
+            if (!string.IsNullOrWhiteSpace(element.ExternalKey))
+            {
+                TempData["ErrorMessage"] =
+                    "МТЦ синхронизирована из 1С и не может удаляться вручную.";
+
+                return RedirectToAction(nameof(Index), new
+                {
+                    sourceType = element.SourceType
+                });
+            }
+
             var result = await _client.DeleteMaterialTechnicalValueAsync(id);
 
             if (!result)
@@ -221,7 +261,7 @@ namespace LaboratoryHeadApp.Controllers
 
             return RedirectToAction(nameof(Index), new
             {
-                sourceType
+                sourceType = element.SourceType
             });
         }
 

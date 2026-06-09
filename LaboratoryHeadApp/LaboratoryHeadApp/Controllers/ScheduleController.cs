@@ -299,5 +299,50 @@ namespace LaboratoryHeadApp.Controllers
         }
 
         public IActionResult Duty() => View();
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SyncCoreDictionaries()
+        {
+            try
+            {
+                var groupsResult = await _scheduleApiClient.ImportGroupsFromCoreAsync();
+                var teachersResult = await _scheduleApiClient.ImportTeachersFromCoreAsync();
+
+                if (groupsResult && teachersResult)
+                {
+                    TempData["SuccessMessage"] =
+                        "Синхронизация групп и преподавателей из Core System успешно выполнена.";
+                }
+                else if (groupsResult)
+                {
+                    TempData["ErrorMessage"] =
+                        "Группы синхронизированы, но при синхронизации преподавателей возникла ошибка.";
+                }
+                else if (teachersResult)
+                {
+                    TempData["ErrorMessage"] =
+                        "Преподаватели синхронизированы, но при синхронизации групп возникла ошибка.";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] =
+                        "Не удалось выполнить синхронизацию групп и преподавателей.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] =
+                    $"Ошибка при синхронизации групп и преподавателей: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SyncLessonsFromMain()
+        {
+            return await SyncLessons(nameof(Index), DateTime.Today);
+        }
     }
 }
